@@ -1,6 +1,7 @@
 package com.nlu.app;
 
 import com.nlu.app.service.DataCrawlService;
+import com.opencsv.CSVWriter;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -14,13 +15,15 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 
 @SpringBootApplication
 @RequiredArgsConstructor
 public class DatawarehouseCrawlApplication {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
         SpringApplication.run(DatawarehouseCrawlApplication.class, args);
 
         // Tạo ChromeOptions và set chế độ chạy ẩn
@@ -69,25 +72,32 @@ public class DatawarehouseCrawlApplication {
         }
         // Tìm tất cả các phần tử có class là 'product-info'
         List<WebElement> products = driver.findElements(By.cssSelector(".product-info"));
-
+        CSVWriter writer = new CSVWriter(new FileWriter(System.getProperty("user.home")+"/Desktop/crawl.csv"));
+        String[] header = {"nameHtml", "imgHtml", "infoHtml"};
+        writer.writeNext(header);
+        String nameHtml;
+        String imgHtml;
+        String infoHtml;
+        int count = 0;
         for (WebElement product : products) {
             try {
                     var href = product.findElement(By.cssSelector("a[href]"));
-                    var name = product.findElement(By.cssSelector(".product__name")).getText();
-                    var imageLink = product.findElement(By.cssSelector(".product__image img")).getAttribute("src");
+                    var name = product.findElement(By.cssSelector(".product__name"));
+                    nameHtml = name.getAttribute("outerHTML");
+                    var imageLink = product.findElement(By.cssSelector(".product__image img"));
+                    imgHtml = imageLink.getAttribute("outerHTML");
                     String productLink = href.getAttribute("href");
-                    System.out.println("Name: "+name);
-                    System.out.println("img url: "+imageLink);
-                    System.out.println("source: "+ productLink);
-                    DataCrawlService.crawl(productLink, driver);
+                    System.out.println("product link: "+productLink);
+                    infoHtml = DataCrawlService.crawl(productLink);
                     System.out.println("-------------------------------------------");
-                System.out.println("Tổng số sản phẩm load được: "+products.size());
+                    writer.writeNext(new String[]{nameHtml, imgHtml, infoHtml});
+                    count++;
             } catch (Exception e) {
-                e.printStackTrace(); // skip element bị lỗi
-            } finally {
-                driver.quit();
+                e.printStackTrace(); // skip product bị lỗi
             }
         }
+        System.out.println("Tổng số sản phẩm crawl được: "+count);
+        driver.quit();
     }
 
 }
