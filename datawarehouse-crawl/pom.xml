@@ -50,6 +50,11 @@
             <artifactId>selenium-java</artifactId>
             <version>4.25.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.6</version> <!-- Kiểm tra phiên bản mới nhất -->
+        </dependency>
     </dependencies>
 
     <build>
