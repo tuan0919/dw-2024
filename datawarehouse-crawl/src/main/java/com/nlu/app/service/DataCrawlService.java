@@ -20,7 +20,13 @@ import java.util.List;
 public class DataCrawlService {
 
     public static String crawl(String webURL) throws InterruptedException {
-        var driver = new ChromeDriver();
+        // Tạo ChromeOptions và set chế độ chạy ẩn
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless"); // Chế độ chạy ẩn
+        options.addArguments("--disable-gpu"); // Tắt GPU (tùy chọn này có thể cần trên Windows)
+        options.addArguments("--no-sandbox"); // Tùy chọn an toàn hơn cho môi trường Linux
+        options.addArguments("--disable-dev-shm-usage"); // Giảm thiểu tài nguyên bộ nhớ chia sẻ
+        var driver = new ChromeDriver(options);
         try {
             // Khởi tạo ChromeDriver với ChromeOptions
             driver.get(webURL);
@@ -38,7 +44,6 @@ public class DataCrawlService {
             var button = driver.findElements(By.cssSelector(".cps-block-technicalInfo .button__show-modal-technical")).get(0);
             actions.moveToElement(button).click().perform();
             var modalContent = driver.findElement(By.cssSelector(".technical-content-modal"));
-            // Nếu bạn muốn phân tích thêm các phần tử con trong modal
 //        List<WebElement> childElements = modalContent.findElements(By.cssSelector(".modal-item-description.mx-2>div")); // Tìm tất cả các phần tử con
 //
 //        for (WebElement child : childElements) {

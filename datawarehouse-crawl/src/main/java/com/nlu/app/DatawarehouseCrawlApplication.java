@@ -28,6 +28,10 @@ public class DatawarehouseCrawlApplication {
 
         // Tạo ChromeOptions và set chế độ chạy ẩn
         ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless"); // Chế độ chạy ẩn
+        options.addArguments("--disable-gpu"); // Tắt GPU (tùy chọn này có thể cần trên Windows)
+        options.addArguments("--no-sandbox"); // Tùy chọn an toàn hơn cho môi trường Linux
+        options.addArguments("--disable-dev-shm-usage"); // Giảm thiểu tài nguyên bộ nhớ chia sẻ
 
         // Khởi tạo ChromeDriver với ChromeOptions
         WebDriver driver = new ChromeDriver(options);
