@@ -1,4 +1,4 @@
-package hiro;
+package com.nlu.app;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -12,7 +12,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class CSVHtmlExtractor1 {
+public class CSVHtmlExtractor {
 
     public static void main(String[] args) throws CsvValidationException {
         String inputCsv = "D:\\Downloads\\crawl.csv"; // Đường dẫn đến tệp CSV đầu vào
