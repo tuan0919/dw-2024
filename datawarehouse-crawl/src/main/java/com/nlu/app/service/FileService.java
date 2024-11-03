@@ -1,20 +1,25 @@
 package com.nlu.app.service;
 
 import com.opencsv.CSVWriter;
+import org.springframework.stereotype.Service;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
+@Service
 public class FileService {
-    public static void main(String[] args) throws IOException {
-        try (CSVWriter writer = new CSVWriter(new FileWriter(System.getProperty("user.home")+"/Desktop/crawl.csv"))) {
-            String[] header = {"Column1", "Column2"};
+    public int writeCSV(String[] header, List<String[]> dataRows, String filePath) throws IOException {
+        int write = 0;
+        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+            // Viết header
             writer.writeNext(header);
-            String[] record1 = {"Value1", "Value2"};
-            writer.writeNext(record1);
-            String[] record2 = {"Value3", "Value4"};
-            writer.writeNext(record2);
-            // Thêm nhiều bản ghi hơn nếu cần
+            // Viết data
+            for (String[] row : dataRows) {
+                writer.writeNext(row);
+                write++;
+            }
         }
+        return write;
     }
 }
