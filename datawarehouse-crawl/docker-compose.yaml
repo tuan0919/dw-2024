@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mysql-identity:
+    container_name: mysql-dbcontrol
+    image: mysql:8.0.19
+    environment:
+      - MYSQL_DATABASE=db_control
+      - MYSQL_USER=db_control_login
+      - MYSQL_PASSWORD=very_secret
+      - MYSQL_ROOT_PASSWORD=123
+    volumes:
+      - db_control-volumes:/var/lib/mysql
+    ports:
+      - '3307:3306'
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  db_control-volumes:
