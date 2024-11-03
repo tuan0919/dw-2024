@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ProcessConfig {
+    Long config_id;
     String save_location;
     String tble_warehouse;
     String tble_staging;
@@ -17,5 +18,5 @@ public class ProcessConfig {
     String lines_terminated_by;
     String ignore_rows;
     String tble_staging_source;
-    String property_id;
+    long property_id;
 }
