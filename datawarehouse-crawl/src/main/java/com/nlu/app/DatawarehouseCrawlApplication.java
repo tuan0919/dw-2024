@@ -1,5 +1,5 @@
 package com.nlu.app;
-import com.nlu.app.service.CellphoneService;
+import com.nlu.app.controller.CrawlController;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @RequiredArgsConstructor
 public class DatawarehouseCrawlApplication {
-    private final CellphoneService cellphoneService;
+    private final CrawlController controller;
     public static void main(String[] args) throws Exception {
         SpringApplication.run(DatawarehouseCrawlApplication.class, args);
     }
@@ -32,10 +32,7 @@ public class DatawarehouseCrawlApplication {
 //        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 //        allOf.get();
 //        pools.shutdown();
-        var sources = cellphoneService
-                .getSourcesFromPage("https://cellphones.com.vn/phu-kien/chuot-ban-phim-may-tinh/chuot.html");
-        for (var source: sources) {
-            cellphoneService.crawlProduct(source);
-        }
+
+        controller.start_crawl(1);
     }
 }

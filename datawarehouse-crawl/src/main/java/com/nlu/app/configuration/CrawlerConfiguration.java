@@ -1,9 +1,9 @@
 package com.nlu.app.configuration;
 
-import com.nlu.app.service.crawler.Crawler;
-import com.nlu.app.service.crawler.Crawler_Cellphones;
-import com.nlu.app.service.extractor.Extractor;
-import com.nlu.app.service.extractor.Extractor_Cellphones;
+import com.nlu.app.service.process.crawler.Crawler;
+import com.nlu.app.service.process.crawler.Crawler_Cellphones;
+import com.nlu.app.service.process.extractor.Extractor;
+import com.nlu.app.service.process.extractor.Extractor_Cellphones;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
