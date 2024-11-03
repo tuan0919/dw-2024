@@ -1,0 +1,81 @@
+{
+  "fields": [
+    {
+      "field_name": "weight",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Trọng lượng']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "size",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Kích thước']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "dpi",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Độ phân giải']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "sensor",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Cảm biến']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "connector",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Kết nối']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "pin",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Pin']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "os",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Tương thích']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "brand",
+      "number": "single",
+      "attr": "text",
+      "type": "xpath",
+      "selector": "//li//p[text()='Hãng sản xuất']/following-sibling::div[1]"
+    },
+    {
+      "field_name": "name",
+      "number": "single",
+      "attr": "text",
+      "type": "css",
+      "selector": ".box-product-name h1"
+    },
+    {
+      "field_name": "price",
+      "number": "single",
+      "attr": "text",
+      "type": "css",
+      "selector": ".product__price--show"
+    },
+    {
+      "field_name": "images",
+      "number": "multiple",
+      "attr": "src",
+      "type": "css",
+      "selector": ".swiper-wrapper img"
+    }
+  ]
+}
