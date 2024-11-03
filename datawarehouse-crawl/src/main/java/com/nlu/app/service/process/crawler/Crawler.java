@@ -1,4 +1,4 @@
-package com.nlu.app.service.crawler;
+package com.nlu.app.service.process.crawler;
 
 import org.openqa.selenium.WebDriver;
 

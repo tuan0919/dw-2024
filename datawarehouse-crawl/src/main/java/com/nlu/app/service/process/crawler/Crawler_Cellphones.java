@@ -1,4 +1,4 @@
-package com.nlu.app.service.crawler;
+package com.nlu.app.service.process.crawler;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -9,7 +9,6 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
