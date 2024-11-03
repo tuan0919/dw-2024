@@ -1,4 +1,4 @@
-package com.nlu.app.service;
+package com.nlu.app.service.process;
 
 import com.opencsv.CSVWriter;
 import org.springframework.stereotype.Service;

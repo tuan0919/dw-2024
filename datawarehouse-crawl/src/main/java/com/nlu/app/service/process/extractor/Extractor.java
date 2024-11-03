@@ -1,4 +1,4 @@
-package com.nlu.app.service.extractor;
+package com.nlu.app.service.process.extractor;
 
 import com.nlu.app.pojo.CrawlFields;
 import org.jsoup.nodes.Document;
