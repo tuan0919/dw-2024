@@ -11,9 +11,10 @@ services:
       - MYSQL_ROOT_PASSWORD=123
     volumes:
       - db_control-volumes:/var/lib/mysql
+      - E:\Temp:/allowed_dir
     ports:
       - '3307:3306'
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --secure-file-priv=/allowed_dir
 
 volumes:
   db_control-volumes:
