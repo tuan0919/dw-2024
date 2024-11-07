@@ -53,7 +53,6 @@ INSERT INTO `configs` (`save_location`, `tble_warehouse`, `tble_staging`, `url`,
 	('C:/ProgramData/MySQL/MySQL Server 8.0/Uploads', 'warehouse_mouse', 'staging_mouse_daily', 'https://cellphones.com.vn/phu-kien/chuot-ban-phim-may-tinh/chuot.html', 'crawl_cellphones', 8600, 'weight, size, dpi, sensor, connector, pin, os, brand, name, price, images', 'weight, size, dpi, sensor, connector, pin, os, brand, name, price, images', ',', '"', '\\n', 1, 'staging_mouse_cellphones', 1);
 
 
-INSERT INTO `file_logs` (`config_id`, `time`, `file_path`, `count`,  `start_time`,  `end_time`, `file_size`, `update_at`, `status`) VALUES
-	(1, '04-11-2024', 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/crawl_cellphones_04-11-2024.csv', 0, NULL, NULL, NULL, '2024-11-03 21:55:48', 'C_SE');
-
+	INSERT INTO `file_logs` (`config_id`, `time`, `file_path`, `count`,  `start_time`,  `end_time`, `file_size`, `update_at`, `status`) VALUES
+		(1, '07-11-2024', 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/crawl_cellphones_04-11-2024.csv', 0, NULL, NULL, NULL, '2024-11-07 21:55:48', 'C_SE');
 
