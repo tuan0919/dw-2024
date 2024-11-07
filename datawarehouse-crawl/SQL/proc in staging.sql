@@ -11,7 +11,7 @@ begin
 	declare file_paths varchar(255);
     declare fields_terminated varchar(10);
 	declare optionally_enclosed varchar(10);
-	declare lines_terminated	varchar(10);
+	declare lines_terminated varchar(10);
 	declare ignore_row	int;
     declare table_staging varchar(50);
     DECLARE stg_fields text;
@@ -21,7 +21,7 @@ begin
     END IF;
     -- lấy các thuộc tính cần thiết để điền vào query load data infile
     select fl.file_path, cf.fields_terminated_by, cf.optionally_enclosed_by, cf.lines_terminated_by, cf.ignore_rows, cf.staging_fields, fl.file_log_id, cf.staging_table
-
+	into file_paths,fields_terminated, optionally_enclosed, lines_terminated, ignore_row, stg_fields, log_id, table_staging
     from dbcontrol.file_logs fl join dbcontrol.configs cf
     on fl.config_id = cf.config_id
     where fl.status = 'C_SE' AND DATE(fl.update_at) = date_load_data
@@ -48,6 +48,7 @@ begin
     
 end //
 delimiter ;
+
 call load_csv_to_temp_staging(null);
 
 
