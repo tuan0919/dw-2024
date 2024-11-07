@@ -56,3 +56,5 @@ ALTER TABLE product_dim
     ADD COLUMN width DECIMAL(18,2),
     ADD COLUMN height DECIMAL(18,2);
 
+ALTER TABLE product_dim
+	ADD COLUMN source varchar(255)

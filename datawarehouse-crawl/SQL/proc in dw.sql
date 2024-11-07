@@ -6,6 +6,7 @@ Viết proc xử lý quá trình load từ staging sang dw
 									B2: Insert dòng dữ liệu có thay đổi vào dw
 */
 drop procedure if exists load_from_staging_to_dw;
+
 delimiter //
 create procedure load_from_staging_to_dw()
 begin
