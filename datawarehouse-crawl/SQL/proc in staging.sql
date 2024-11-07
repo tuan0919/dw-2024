@@ -4,7 +4,7 @@ use dbstaging;
 LẤY FILE CÓ TRẠNG THÁI LÀ L_RE (LOAD READY EXTRACT) ĐỂ ĐƯA VÀO CÂU LỆNH LOAD DATA IFILE
 MỤC ĐÍCH CỦA PROCEDURE LÀ LẤY ĐƯỢC QUERY LOAD CSV VÀO STAGING ĐỂ EXEC Ở JAVA
 */
-
+drop procedure  load_csv_to_temp_staging;
 delimiter //
 create procedure load_csv_to_temp_staging()
 begin
@@ -46,11 +46,12 @@ begin
     
 end //
 delimiter ;
-CALL load_csv_to_temp_staging();
+
 
 /*
 UPDATE STATUS IN DBCONTROL.FILE_LOGS
 */
+drop PROCEDURE if exists update_file_status;
 DELIMITER //
 
 CREATE PROCEDURE update_file_status(
@@ -74,7 +75,7 @@ DELIMITER ;
 
 
 /*TRANSFORM + CLEANING DỮ LIỆU*/
-
+drop procedure if exists transform_and_cleaning_data;
 delimiter //
 create procedure transform_and_cleaning_data()
 begin
@@ -96,8 +97,10 @@ begin
 		product_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price DECIMAL(18,2),
 		image MEDIUMTEXT,
-		size VARCHAR(255),
-		weight VARCHAR(50),
+		length decimal(18,2),
+        width decimal(18,2),
+        height decimal(18,2),
+		weight decimal(18,2),
 		resolution VARCHAR(255),
 		sensor VARCHAR(255),
 		connectivity VARCHAR(255),
@@ -146,7 +149,9 @@ begin
 		product_name,
 		price,
 		image,
-		size,
+		length,
+        width,
+        height,
 		weight,
 		resolution,
 		sensor,
@@ -179,8 +184,206 @@ begin
 				WHERE images IS NOT NULL
 			) AS temp
 		) AS image,
-		size,
-		weight,
+       CASE
+           -- Trường hợp có 3 kích thước x x x cm ở cuối chuỗi, chuyển đổi thành mm
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) cm$' THEN
+               CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 1), ' ', -1), ',', '.') AS DECIMAL(18,2)) * 10
+			WHEN TRIM(size) REGEXP '^Cao: ([0-9.\\,]+) mm x Rộng: ([0-9.\\,]+) mm x Dày: ([0-9.\\,]+) mm$' THEN
+              CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Cao: ', -1), ' mm', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(TRIM(size), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+)mm$' THEN
+               CAST(SUBSTRING_INDEX(TRIM(size), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Dài: ([0-9.\\,]+)mm \\| Rộng: ([0-9.\\,]+) mm \\| Cao: ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Dài: ', -1), 'mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm \\(Cao x Rộng x Dày\\)$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 1), ' ', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+)x([0-9.\\,]+)x([0-9.\\,]+)mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', 1), ' ', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.\\,]+) mm x Rộng ([0-9.\\,]+) mm x Dày ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Cao ', -1), ' mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) mm x ([0-9.\\,]+) mm x ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' mm x', 1), ' ', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+)cm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 1), ' ', -1) AS DECIMAL(18,2)) * 10
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm \\(Dài x Rộng x Cao\\)$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 1), ' ', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)mm \\* ([0-9.,]+)mm \\* ([0-9.,]+)mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'mm *', 1), ' ', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)mm \\* ([0-9.,]+)mm \\* ([0-9.,]+)mm.$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'mm *', 1), ' ', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) ×([0-9.,]+) ×([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' ×', 1), ' ', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^- Bàn phím: Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm - Chuột: Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Chuột: Dài ', -1), ' cm', 1), ',', '.') AS DECIMAL(18,2)) * 10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(TRIM(size), ' x', 1) AS DECIMAL(18,2)) 
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(TRIM(size), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) × ([0-9.,]+) × ([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(TRIM(size), ' ×', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)cm × ([0-9.,]+)cm × ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(TRIM(size), ' ×', -1), 'cm', '') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)\\*([0-9.,]+)\\*([0-9.,]+)mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(TRIM(size), '*', 1), 'mm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x([0-9.,]+) x ([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(TRIM(size), ' x', 1), 'mm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Dài: ([0-9.,]+)cm Cao : ([0-9.,]+) cm Rộng : ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Cao :', 1), 'Dài: ', -1), 'cm', '') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm Độ dài dây: ([0-9.,]+) m$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'ngang', 1), 'Dài ', -1), ' cm', '') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.,]+) mm x Rộng ([0-9.,]+) mm x Sâu ([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Rộng', 1), 'Cao ', -1), ' mm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) in \\([0-9.,]+ x [0-9.,]+ x [0-9.,]+ mm\\)$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'mm', 1), '(', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.,]+)cm x Rộng ([0-9.,]+)cm x Dày ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Cao ', -1), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)x([0-9.,]+)x([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', 1), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP 'Chuột : Dài: ([0-9.,]+)cm, Cao : ([0-9.,]+) cm, Rộng : ([0-9.,]+)cm' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Chuột : Dài: ', -1), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) cm \\([0-9.,]+ x [0-9.,]+ x [0-9.,]+ in\\)' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 1), ' cm', 1) AS DECIMAL(18,2))*10
+			WHEN TRIM(size) LIKE '%pin%' THEN NULL
+            WHEN TRIM(size) LIKE '' THEN NULL
+           ELSE NULL
+       END AS length,
+       CASE
+
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) cm$' THEN
+               CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -2), ' x', 1), ',', '.') AS DECIMAL(18,2)) * 10
+			WHEN TRIM(size) REGEXP '^Cao: ([0-9.\\,]+) mm x Rộng: ([0-9.\\,]+) mm x Dày: ([0-9.\\,]+) mm$' THEN
+               CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x Dày: ', -1), ' mm', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -2), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+)mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -2), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Dài: ([0-9.\\,]+)mm \\| Rộng: ([0-9.\\,]+) mm \\| Cao: ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Rộng: ', -1), ' mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm \\(Cao x Rộng x Dày\\)$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 2), ' x', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+)x([0-9.\\,]+)x([0-9.\\,]+)mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', -2), 'x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.\\,]+) mm x Rộng ([0-9.\\,]+) mm x Dày ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Rộng ', -1), ' mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) mm x ([0-9.\\,]+) mm x ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -2), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+)cm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -2), ' x', 1) AS DECIMAL(18,2)) * 10
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm \\(Dài x Rộng x Cao\\)$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 2), ' x', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)mm \\* ([0-9.,]+)mm \\* ([0-9.,]+)mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'mm *', -2), ' *', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)mm \\* ([0-9.,]+)mm \\* ([0-9.,]+)mm.$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'mm *', -2), ' *', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) ×([0-9.,]+) ×([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' ×', -2), ' ×', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^- Bàn phím: Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm - Chuột: Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Chuột: Dài ', -1), ' cm - ngang ', -1), ' cm', '') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -2), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 2), ' x', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) × ([0-9.,]+) × ([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' ×', -2), ' ×', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)cm × ([0-9.,]+)cm × ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' ×', 2), ' ×', -1), 'cm', '') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)\\*([0-9.,]+)\\*([0-9.,]+)mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), '*', 2), '*', -1), 'mm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x([0-9.,]+) x ([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -2), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Dài: ([0-9.,]+)cm Cao : ([0-9.,]+) cm Rộng : ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(TRIM(SUBSTRING_INDEX(size, 'Rộng : ', -1)), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm Độ dài dây: ([0-9.,]+) m$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'cao', 1), 'ngang ', -1), ' cm', '') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.,]+) mm x Rộng ([0-9.,]+) mm x Sâu ([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Sâu', 1), 'Rộng ', -1), ' mm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) in \\([0-9.,]+ x [0-9.,]+ x [0-9.,]+ mm\\)$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', -2), ' mm', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.,]+)cm x Rộng ([0-9.,]+)cm x Dày ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Rộng ', -1), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)x([0-9.,]+)x([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', -2), 'x', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP 'Chuột : Dài: ([0-9.,]+)cm, Cao : ([0-9.,]+) cm, Rộng : ([0-9.,]+)cm' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Rộng : ', -1), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) cm \\([0-9.,]+ x [0-9.,]+ x [0-9.,]+ in\\)' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -4), ' x', 1) AS DECIMAL(18,2))*10
+			WHEN TRIM(size) LIKE '%pin%' THEN NULL
+            WHEN TRIM(size) LIKE '' THEN NULL
+           ELSE NULL
+       END AS width,
+       CASE
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) cm$' THEN
+               CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -1), ' cm', 1), ',', '.') AS DECIMAL(18,2)) * 10 
+			WHEN TRIM(size) REGEXP '^Cao: ([0-9.\\,]+) mm x Rộng: ([0-9.\\,]+) mm x Dày: ([0-9.\\,]+) mm$' THEN
+               CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x Dày: ', -1), ' mm', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -1), ' x', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+)mm$' THEN
+               CAST(REPLACE(SUBSTRING_INDEX(TRIM(SUBSTRING_INDEX(TRIM(size), ' x ', -1)), 'mm', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Dài: ([0-9.\\,]+)mm \\| Rộng: ([0-9.\\,]+) mm \\| Cao: ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Cao: ', -1), ' mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm \\(Cao x Rộng x Dày\\)$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 3), ' x', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+)x([0-9.\\,]+)x([0-9.\\,]+)mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', -1), 'mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.\\,]+) mm x Rộng ([0-9.\\,]+) mm x Dày ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Dày ', -1), ' mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) mm x ([0-9.\\,]+) mm x ([0-9.\\,]+) mm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -1), ' mm', 1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+)cm$' THEN
+               CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -1), ' cm', 1) AS DECIMAL(18,2)) * 10
+			WHEN TRIM(size) REGEXP '^([0-9.\\,]+) x ([0-9.\\,]+) x ([0-9.\\,]+) mm \\(Dài x Rộng x Cao\\)$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', 3), ' x', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)mm \\* ([0-9.,]+)mm \\* ([0-9.,]+)mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'mm *', -1), ' *', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)mm \\* ([0-9.,]+)mm \\* ([0-9.,]+)mm.$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'mm *', -1), ' *', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) ×([0-9.,]+) ×([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX((SUBSTRING_INDEX(TRIM(size), ' mm', 1)), ' ×', -1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^- Bàn phím: Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm - Chuột: Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(TRIM(size), 'cao ', -1), ' cm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(TRIM(size), ' x', -1) AS DECIMAL(18,2)) 
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x([0-9.,]+) mm$' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -1), ' x', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) × ([0-9.,]+) × ([0-9.,]+) mm$' THEN
+				 CAST(SUBSTRING_INDEX(TRIM(size), ' ×', -1) AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)cm × ([0-9.,]+)cm × ([0-9.,]+)cm$' THEN
+				 CAST(REPLACE(SUBSTRING_INDEX(TRIM(size), ' ×', 1), 'cm', '') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)\\*([0-9.,]+)\\*([0-9.,]+)mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(TRIM(size), '*', -1), 'mm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x([0-9.,]+) x ([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(TRIM(size), ' x', -1), 'mm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Dài: ([0-9.,]+)cm Cao : ([0-9.,]+) cm Rộng : ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Rộng :', 1), 'Cao : ', -1), 'cm', '') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Dài ([0-9.,]+) cm - ngang ([0-9.,]+) cm - cao ([0-9.,]+) cm Độ dài dây: ([0-9.,]+) m$' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'cao ', -1), ' cm', 1) AS DECIMAL(18,2)) * 10
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.,]+) mm x Rộng ([0-9.,]+) mm x Sâu ([0-9.,]+) mm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x Sâu ', -1), ' mm', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) in \\([0-9.,]+ x [0-9.,]+ x [0-9.,]+ mm\\)$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', -1), ' mm', 1), ',', '.') AS DECIMAL(18,2))
+			WHEN TRIM(size) REGEXP '^Cao ([0-9.,]+)cm x Rộng ([0-9.,]+)cm x Dày ([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Dày ', -1), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP '^([0-9.,]+)x([0-9.,]+)x([0-9.,]+)cm$' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'x', -1), 'cm', 1), ',', '.') AS DECIMAL(18,2))*10
+			WHEN TRIM(size) REGEXP 'Chuột : Dài: ([0-9.,]+)cm, Cao : ([0-9.,]+) cm, Rộng : ([0-9.,]+)cm' THEN
+				CAST(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), 'Cao : ', -1), 'cm', 1), ',', '.') AS DECIMAL(18,2)) 
+			WHEN TRIM(size) REGEXP '([0-9.,]+) x ([0-9.,]+) x ([0-9.,]+) cm \\([0-9.,]+ x [0-9.,]+ x [0-9.,]+ in\\)' THEN
+				CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(TRIM(size), ' x', -3), ' x', 1) AS DECIMAL(18,2))*10
+			WHEN TRIM(size) LIKE '%pin%' THEN NULL
+            WHEN TRIM(size) LIKE '' THEN NULL
+           ELSE NULL
+       END AS height,
+       CASE
+			WHEN weight REGEXP '^[0-9]+(\\.[0-9]{1,3})?( g| kg)$' THEN
+				CASE
+					WHEN weight LIKE '% g' THEN CAST(TRIM(SUBSTRING_INDEX(weight, ' ', 1)) AS DECIMAL(18,2))
+					WHEN weight LIKE '% kg' THEN CAST(TRIM(SUBSTRING_INDEX(weight, ' ', 1)) AS DECIMAL(18,2)) * 1000
+					ELSE NULL
+				END
+			ELSE NULL  -- Các giá trị không hợp lệ hoặc không khớp định dạng
+		END AS weight,
 		dpi,
 		sensor,
 		connector,
@@ -188,8 +391,7 @@ begin
 		os,
 		brand,
 		created_at
-	FROM 
-		staging_mouse_cellphones;
+	FROM staging_mouse_cellphones;
 
     
     -- CLEANING
@@ -202,7 +404,7 @@ begin
     CREATE TEMPORARY TABLE temp_product AS
     SELECT *
     FROM (
-        SELECT *, ROW_NUMBER() OVER (PARTITION BY product_name, manufacturer, size, weight, resolution ORDER BY manufacturer) AS row_num
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY product_name, manufacturer, weight, resolution ORDER BY manufacturer) AS row_num
         FROM dbstaging.staging_combined
     ) AS temp
     WHERE row_num = 1;
@@ -215,7 +417,9 @@ begin
         product_name,
 		price,
 		image,
-		size,
+		length,
+        width,
+        height,
 		weight,
 		resolution,
 		sensor,
@@ -229,7 +433,9 @@ begin
         product_name,
 		price,
 		image,
-		size,
+		length,
+        width,
+        height,
 		weight,
 		resolution,
 		sensor,
@@ -244,5 +450,5 @@ begin
     
 end //
 delimiter ;
-call transform_and_cleaning_data;
 
+	

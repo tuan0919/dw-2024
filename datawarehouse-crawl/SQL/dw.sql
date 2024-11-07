@@ -50,5 +50,9 @@
 		holiday VARCHAR(15) NOT NULL,
 		day_type VARCHAR(10) NOT NULL
 	);
-
+ALTER TABLE product_dim
+    DROP COLUMN size,
+    ADD COLUMN length DECIMAL(18,2),
+    ADD COLUMN width DECIMAL(18,2),
+    ADD COLUMN height DECIMAL(18,2);
 

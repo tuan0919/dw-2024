@@ -12,7 +12,7 @@
 	Khi bảng staging có dữ liệu, sẽ có 1 proc để load từ staging vào datawarehouse 
 	*/
 	-- tạo bảng tạm cho nguồn gearvn
-	CREATE TABLE staging_gearvn (
+	CREATE TABLE if not exists staging_gearvn (
 		id INT AUTO_INCREMENT PRIMARY KEY,
 		product_name TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
 		image TEXT,
@@ -29,7 +29,7 @@
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	-- tạo bảng tạm cho nguồn cellphones
-	CREATE TABLE staging_mouse_cellphones (
+	CREATE TABLE if not exists staging_mouse_cellphones (
 		id INT AUTO_INCREMENT PRIMARY KEY,
 		weight TEXT,
 		size TEXT,
@@ -49,13 +49,13 @@
 
 
 	-- Tạo bảng staging để lưu dữ liệu từ 2 bảng tạm
-	CREATE TABLE staging_mouse_daily (
+	CREATE TABLE if not exists staging_mouse_daily (
 		id INT AUTO_INCREMENT PRIMARY KEY,
 		product_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price DECIMAL(18,2),
 		image MEDIUMTEXT,
 		size VARCHAR(255),
-		weight VARCHAR(50),
+		weight decimal(18,2),
 		resolution VARCHAR(255),
 		sensor VARCHAR(255),
 		connectivity VARCHAR(255),
@@ -87,6 +87,13 @@
 		holiday VARCHAR(15) NOT NULL,
 		day_type VARCHAR(10) NOT NULL
 	);
+    
+ALTER TABLE staging_mouse_daily
+    DROP COLUMN size,
+    ADD COLUMN length DECIMAL(18,2),
+    ADD COLUMN width DECIMAL(18,2),
+    ADD COLUMN height DECIMAL(18,2);
+
 
 
 
