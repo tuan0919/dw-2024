@@ -4,7 +4,7 @@ use dbstaging;
 LẤY FILE CÓ TRẠNG THÁI LÀ L_RE (LOAD READY EXTRACT) ĐỂ ĐƯA VÀO CÂU LỆNH LOAD DATA IFILE
 MỤC ĐÍCH CỦA PROCEDURE LÀ LẤY ĐƯỢC QUERY LOAD CSV VÀO STAGING ĐỂ EXEC Ở JAVA
 */
-drop procedure  load_csv_to_temp_staging;
+
 delimiter //
 create procedure load_csv_to_temp_staging( in date_load_data date)
 begin
@@ -77,7 +77,7 @@ END //
 
 DELIMITER ;
 
-
+call transform_and_cleaning_data;
 /*TRANSFORM + CLEANING DỮ LIỆU*/
 drop procedure if exists transform_and_cleaning_data;
 delimiter //
@@ -111,7 +111,8 @@ begin
 		battery VARCHAR(255),
 		compatibility VARCHAR(255),
 		manufacturer VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        source varchar(255)
     );
     -- insert bảng staging_gearvn vào bảng tạm
     /*
@@ -163,7 +164,8 @@ begin
 		battery,
 		compatibility,
 		manufacturer,
-		created_at
+		created_at,
+        source
 	)
 	SELECT 
 		name,
@@ -394,7 +396,8 @@ begin
 		pin,
 		os,
 		brand,
-		created_at
+		created_at,
+        'cellphoneS'
 	FROM staging_mouse_cellphones;
 
     
@@ -412,6 +415,14 @@ begin
         FROM dbstaging.staging_combined
     ) AS temp
     WHERE row_num = 1;
+    SET SQL_SAFE_UPDATES = 0;
+
+    DELETE FROM temp_product
+	WHERE 
+		product_name IS NULL                      -- Kiểm tra tên sản phẩm không được để trống
+		OR price IS NULL;  
+	SET SQL_SAFE_UPDATES = 1;
+
     -- chuyển mã cho chắc :v
     ALTER TABLE temp_product
 	CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -431,7 +442,8 @@ begin
 		battery,
 		compatibility,
 		manufacturer,
-		created_at
+		created_at,
+        source
     )
     SELECT 
         product_name,
@@ -447,7 +459,8 @@ begin
 		battery,
 		compatibility,
 		manufacturer,
-		created_at
+		created_at,
+        source
     FROM 
         temp_product;
     

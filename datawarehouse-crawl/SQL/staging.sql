@@ -92,7 +92,7 @@ ALTER TABLE dbstaging.staging_mouse_daily
     ADD COLUMN length DECIMAL(18,2),
     ADD COLUMN width DECIMAL(18,2),
     ADD COLUMN height DECIMAL(18,2);
-
-
+alter table dbstaging.staging_mouse_daily
+	ADD COLUMN source varchar(255)
 
 
