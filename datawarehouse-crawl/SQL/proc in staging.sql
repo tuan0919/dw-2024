@@ -6,23 +6,25 @@ MỤC ĐÍCH CỦA PROCEDURE LÀ LẤY ĐƯỢC QUERY LOAD CSV VÀO STAGING Đ�
 */
 drop procedure  load_csv_to_temp_staging;
 delimiter //
-create procedure load_csv_to_temp_staging()
+create procedure load_csv_to_temp_staging( in date_load_data date)
 begin
 	declare file_paths varchar(255);
     declare fields_terminated varchar(10);
 	declare optionally_enclosed varchar(10);
-	declare lines_terminated	varchar(10);
+	declare lines_terminated varchar(10);
 	declare ignore_row	int;
     declare table_staging varchar(50);
     DECLARE stg_fields text;
     declare log_id int;
-    
+    IF date_load_data IS NULL THEN
+        SET date_load_data = CURDATE();
+    END IF;
     -- lấy các thuộc tính cần thiết để điền vào query load data infile
     select fl.file_path, cf.fields_terminated_by, cf.optionally_enclosed_by, cf.lines_terminated_by, cf.ignore_rows, cf.staging_fields, fl.file_log_id, cf.staging_table
-    into file_paths,fields_terminated, optionally_enclosed, lines_terminated, ignore_row, stg_fields, log_id, table_staging
+	into file_paths,fields_terminated, optionally_enclosed, lines_terminated, ignore_row, stg_fields, log_id, table_staging
     from dbcontrol.file_logs fl join dbcontrol.configs cf
     on fl.config_id = cf.config_id
-    where fl.status = 'C_SE'
+    where fl.status = 'C_SE' AND DATE(fl.update_at) = date_load_data
     limit 1;
 
     -- Kiểm tra xem file có null hay không
@@ -46,6 +48,8 @@ begin
     
 end //
 delimiter ;
+
+call load_csv_to_temp_staging(null);
 
 
 /*
@@ -447,8 +451,16 @@ begin
     FROM 
         temp_product;
     
-    
 end //
 delimiter ;
+
+/*LOAD DATE_DIM*/
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\date_dim_without_quarter.csv'
+INTO TABLE date_dim
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 0 ROWS;
+
 
 	
