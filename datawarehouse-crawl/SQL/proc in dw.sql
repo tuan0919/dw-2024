@@ -5,6 +5,7 @@ Viết proc xử lý quá trình load từ staging sang dw
     2. Nếu dữ liệu được cập nhật -> B1: Thay đổi dòng dữ liệu trong dw với: isDelete = True, expried_date = NOW(), date_delete = NOW()
 									B2: Insert dòng dữ liệu có thay đổi vào dw
 */
+drop procedure if exists load_from_staging_to_dw;
 delimiter //
 create procedure load_from_staging_to_dw()
 begin
@@ -15,7 +16,9 @@ begin
 		product_name,
 		price,
 		image,
-		size,
+		length,
+        width,
+        height,
 		weight,
 		resolution,
 		sensor,
@@ -28,7 +31,9 @@ begin
 		product_name,
 		price,
 		image,
-		size,
+		length,
+        width,
+        height,
 		weight,
 		resolution,
 		sensor,
@@ -58,7 +63,9 @@ begin
         and pd2.manufacturer = sm.manufacturer
         AND (pd2.price <> sm.price OR
              pd2.image <> sm.image OR
-             pd2.size <> sm.size OR
+             pd2.length <>sm.length or
+			 pd2.width <> sm.width or
+			 pd2.height <> sm.height or
              pd2.weight <> sm.weight OR
              pd2.resolution <> sm.resolution OR
              pd2.sensor <> sm.sensor OR
@@ -93,7 +100,9 @@ begin
 		product_name,
 		price,
 		image,
-		size,
+		length,
+        width,
+        height,
 		weight,
 		resolution,
 		sensor,
@@ -106,7 +115,9 @@ begin
 		tp.product_name,
 		tp.price,
 		tp.image,
-		tp.size,
+		length,
+        width,
+        height,
 		tp.weight,
 		tp.resolution,
 		tp.sensor,
@@ -122,5 +133,3 @@ begin
 end //
 delimiter ;
 
-
-call load_from_staging_to_dw;
