@@ -65,7 +65,6 @@
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
-	DROP TABLE IF EXISTS date_dim;
 
 	CREATE TABLE IF NOT EXISTS date_dim (
 		date_sk INT PRIMARY KEY,
@@ -88,7 +87,7 @@
 		day_type VARCHAR(10) NOT NULL
 	);
     
-ALTER TABLE staging_mouse_daily
+ALTER TABLE dbstaging.staging_mouse_daily
     DROP COLUMN size,
     ADD COLUMN length DECIMAL(18,2),
     ADD COLUMN width DECIMAL(18,2),

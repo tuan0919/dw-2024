@@ -129,7 +129,46 @@ begin
 		temp_update_products tp;
 
     
-    
 end //
 delimiter ;
-
+/*INSERT DATE_DIM FROM STAGING TO DW*/
+INSERT INTO datawarehouse.date_dim (
+    date_sk,
+    full_date,
+    day_since_2005,
+    month_since_2005,
+    day_of_week,
+    calendar_month,
+    calendar_year,
+    calendar_year_month,
+    day_of_month,
+    day_of_year,
+    week_of_year_sunday,
+    year_week_sunday,
+    week_sunday_start,
+    week_of_year_monday,
+    year_week_monday,
+    week_monday_start,
+    holiday,
+    day_type
+)
+SELECT 
+    date_sk,
+    full_date,
+    day_since_2005,
+    month_since_2005,
+    day_of_week,
+    calendar_month,
+    calendar_year,
+    calendar_year_month,
+    day_of_month,
+    day_of_year,
+    week_of_year_sunday,
+    year_week_sunday,
+    week_sunday_start,
+    week_of_year_monday,
+    year_week_monday,
+    week_monday_start,
+    holiday,
+    day_type
+FROM dbstaging.date_dim;
