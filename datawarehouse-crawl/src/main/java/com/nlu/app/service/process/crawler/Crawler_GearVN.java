@@ -1,9 +1,6 @@
 package com.nlu.app.service.process.crawler;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
@@ -22,7 +19,12 @@ public class Crawler_GearVN implements Crawler {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(25));
             var gallery = driver.findElement(By.cssSelector(".product-gallery")).getAttribute("outerHTML");
             var infoHeader = driver.findElement(By.cssSelector(".info-header")).getAttribute("outerHTML");
-            var tableInfo = driver.findElement(By.cssSelector("table")).getAttribute("outerHTML");
+            String tableInfo;
+            try {
+                tableInfo = driver.findElement(By.cssSelector(".table-technical ul")).getAttribute("outerHTML");
+            } catch (NoSuchElementException e) {
+                tableInfo = driver.findElement(By.cssSelector("table")).getAttribute("outerHTML");
+            }
             // Thay thế tất cả các URL bắt đầu bằng "//" thành URL đầy đủ
             // Lấy URL hiện tại để xác định giao thức
             String baseUrl = driver.getCurrentUrl();
@@ -110,9 +112,9 @@ public class Crawler_GearVN implements Crawler {
         }
         return List.of();
     }
-//
-//    public static void main(String[] args) {
-//        var instance = new Crawler_GearVN();
-//        System.out.println(instance.prepareHTML("https://gearvn.com/products/chuot-razer-deathadder-v3-pro-faker-edition"));
-//    }
+
+    public static void main(String[] args) {
+        var instance = new Crawler_GearVN();
+        System.out.println(instance.prepareHTML("https://gearvn.com/products/chuot-dareu-khong-day-em911x-rgb-trang"));
+    }
 }
