@@ -9,6 +9,7 @@ import com.nlu.app.service.database.ProcessConfigService;
 import com.nlu.app.service.database.ProcessPropertiesService;
 import com.nlu.app.service.process.CellphoneService;
 import com.nlu.app.service.process.FileService;
+import com.nlu.app.service.process.GearvnService;
 import com.nlu.app.service.process.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
@@ -24,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CrawlController {
     public static final String CELLPHONE_PROPERTY = "cellphone_properties";
+    public static final String GEARVN_PROPERTY = "gearvn_properties";
     private final ProcessConfigService processConfigService;
     private final ProcessPropertiesService processPropertiesService;
     private final FileLogService fileLogService;
@@ -43,11 +45,19 @@ public class CrawlController {
                 service = new CellphoneService(json);
                 break;
             }
+            case GEARVN_PROPERTY -> {
+                String json = properties.getValue();
+                service = new GearvnService(json);
+                break;
+            }
         }
         String today = LocalDate.now()
                 .format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-        String filePath = String.format("%s/%s_%s.csv",
+        String filePath = String.format("%s\\%s_%s.csv",
                 processConfig.getSave_location(),
+                processConfig.getFile_name(),
+                today);
+        String logPath = String.format("/allowed_dir/%s_%s.csv",
                 processConfig.getFile_name(),
                 today);
         assert service != null;
@@ -56,7 +66,7 @@ public class CrawlController {
                 .update_at(LocalDateTime.now())
                 .count(0)
                 .start_time(LocalDateTime.now())
-                .file_path(filePath)
+                .file_path(logPath)
                 .status(LogStatus.C_E)
                 .time(today)
                 .build();
