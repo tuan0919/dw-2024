@@ -54,5 +54,5 @@ INSERT INTO `configs` (`save_location`, `tble_warehouse`, `tble_staging`, `url`,
 
 
 	INSERT INTO `file_logs` (`config_id`, `time`, `file_path`, `count`,  `start_time`,  `end_time`, `file_size`, `update_at`, `status`) VALUES
-		(1, '07-11-2024', 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/crawl_cellphones_04-11-2024.csv', 0, NULL, NULL, NULL, '2024-11-07 21:55:48', 'C_SE');
+		(1, '07-11-2024', 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/crawl_cellphones_04-11-20241.csv', 0, NULL, NULL, NULL, '2024-11-12 21:55:48', 'C_SE');
 

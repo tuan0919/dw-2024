@@ -4,7 +4,7 @@ use dbstaging;
 LẤY FILE CÓ TRẠNG THÁI LÀ L_RE (LOAD READY EXTRACT) ĐỂ ĐƯA VÀO CÂU LỆNH LOAD DATA IFILE
 MỤC ĐÍCH CỦA PROCEDURE LÀ LẤY ĐƯỢC QUERY LOAD CSV VÀO STAGING ĐỂ EXEC Ở JAVA
 */
-
+drop procedure if exists load_csv_to_temp_staging;
 delimiter //
 create procedure load_csv_to_temp_staging( in date_load_data date)
 begin
@@ -20,10 +20,10 @@ begin
         SET date_load_data = CURDATE();
     END IF;
     -- lấy các thuộc tính cần thiết để điền vào query load data infile
-    select fl.file_path, cf.fields_terminated_by, cf.optionally_enclosed_by, cf.lines_terminated_by, cf.ignore_rows, cf.staging_fields, fl.file_log_id, cf.staging_table
+    select fl.file_path, cf.fields_terminated_by, cf.optionally_enclosed_by, cf.lines_terminated_by, cf.ignore_rows, pp.header_csv, fl.file_log_id, cf.staging_table
 	into file_paths,fields_terminated, optionally_enclosed, lines_terminated, ignore_row, stg_fields, log_id, table_staging
-    from dbcontrol.file_logs fl join dbcontrol.configs cf
-    on fl.config_id = cf.config_id
+    from dbcontrol.file_logs fl join dbcontrol.configs cf on fl.config_id = cf.config_id
+								join dbcontrol.process_properties pp on pp.property_id = cf.property_id
     where fl.status = 'C_SE' AND DATE(fl.update_at) = date_load_data
     limit 1;
 
@@ -49,7 +49,7 @@ begin
 end //
 delimiter ;
 
-call load_csv_to_temp_staging(null);
+
 
 
 /*
@@ -77,7 +77,6 @@ END //
 
 DELIMITER ;
 
-call transform_and_cleaning_data;
 /*TRANSFORM + CLEANING DỮ LIỆU*/
 drop procedure if exists transform_and_cleaning_data;
 delimiter //
@@ -114,39 +113,7 @@ begin
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         source varchar(255)
     );
-    -- insert bảng staging_gearvn vào bảng tạm
-    /*
-    INSERT INTO staging_combined  (
-        product_name,
-        image,
-        size,
-        weight,
-        resolution,
-        sensor,
-        button,
-        connectivity,
-        battery,
-        compatibility,
-        utility,
-        manufacturer,
-        created_at
-    )
-    SELECT 
-        product_name,
-        image,
-        size,
-        weight,
-        resolution,
-        sensor,
-        button,
-        connectivity,
-        battery,
-        compatibility,
-        utility,
-        manufacturer,
-        created_at
-    FROM 
-        staging_gearvn; */
+    
 	SET SESSION group_concat_max_len = 1000000;  -- Hoặc giá trị lớn hơn tùy theo nhu cầu
 
     -- insert bảng staging_cellphones vào bảng tạm
