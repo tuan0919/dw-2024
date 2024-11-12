@@ -32,14 +32,6 @@ public class DatawarehouseCrawlApplication {
 
     @PostConstruct
     public void test() throws Exception {
-        var log = FileLogs.builder()
-                .file_path("test")
-                .status(LogStatus.C_FE)
-                .count(69)
-                .config_id(2L).build();
-        var key = fileLogService.addNewLog(log);
-        var result = fileLogService.findOne(key);
-        System.out.println("key "+key);
-        System.out.println("result: "+result);
+        controller.start_crawl(3);
     }
 }
