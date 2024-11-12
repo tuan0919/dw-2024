@@ -1,4 +1,7 @@
 {
+  "instance": "com.nlu.app.entity.Mouse_GearVN.class",
+  "crawler": "com.nlu.app.service.crawler.Crawler_GearVN.class",
+  "extractor": "com.nlu.app.service.extractor.Extractor_GearVN.class",
   "fields": [
     {
       "field_name": "weight",
