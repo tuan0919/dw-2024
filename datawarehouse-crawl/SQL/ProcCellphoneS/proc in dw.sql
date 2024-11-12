@@ -6,7 +6,7 @@ Viết proc xử lý quá trình load từ staging sang dw
 									B2: Insert dòng dữ liệu có thay đổi vào dw
 */
 drop procedure if exists load_from_staging_to_dw;
-
+call  load_from_staging_to_dw;
 delimiter //
 create procedure load_from_staging_to_dw()
 begin
@@ -26,7 +26,8 @@ begin
 		connectivity,
 		battery,
 		compatibility,
-		manufacturer
+		manufacturer,
+        source
 	)
 	SELECT 
 		product_name,
@@ -41,7 +42,8 @@ begin
 		connectivity,
 		battery,
 		compatibility,
-		manufacturer
+		manufacturer,
+        source
 	FROM dbstaging.staging_mouse_daily sm
 	WHERE NOT EXISTS (
 		SELECT 1 
@@ -110,7 +112,8 @@ begin
 		connectivity,
 		battery,
 		compatibility,
-		manufacturer
+		manufacturer,
+        source
 	)
 	SELECT 
 		tp.product_name,
@@ -125,9 +128,15 @@ begin
 		tp.connectivity,
 		tp.battery,
 		tp.compatibility,
-		tp.manufacturer
+		tp.manufacturer,
+        source
 	FROM 
 		temp_update_products tp;
+        
+	UPDATE product_dim AS p
+	JOIN date_dim AS d ON DATE(p.created_at) = d.full_date
+	SET p.date_insert_fk = d.date_sk
+	WHERE p.date_insert_fk IS NULL;
 
     
 end //
