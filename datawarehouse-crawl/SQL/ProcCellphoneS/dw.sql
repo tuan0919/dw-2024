@@ -57,4 +57,9 @@ ALTER TABLE product_dim
     ADD COLUMN height DECIMAL(18,2);
 
 ALTER TABLE product_dim
-	ADD COLUMN source varchar(255)
+	ADD COLUMN source varchar(255);
+ALTER TABLE product_dim
+	ADD COLUMN date_insert_fk int;
+ALTER TABLE product_dim
+    ADD CONSTRAINT fk_date_insert FOREIGN KEY (date_insert_fk) REFERENCES date_dim(date_sk);
+
