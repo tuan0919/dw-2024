@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.time.LocalDate;
+import java.time.Month;
+
 @SpringBootApplication
 @RequiredArgsConstructor
 public class DatawarehouseCrawlApplication {
@@ -32,6 +35,9 @@ public class DatawarehouseCrawlApplication {
 
     @PostConstruct
     public void test() throws Exception {
-        controller.start_crawl(3);
+//        controller.start_crawl(3);
+        var date = LocalDate.of(2024, Month.NOVEMBER, 4);
+        jdbi.onDemand(TempStagingDAO.class)
+                .insertToTempStaging(date);
     }
 }
