@@ -12,20 +12,20 @@
 	Khi bảng staging có dữ liệu, sẽ có 1 proc để load từ staging vào datawarehouse 
 	*/
 	-- tạo bảng tạm cho nguồn gearvn
+    
 	CREATE TABLE if not exists staging_gearvn (
 		id INT AUTO_INCREMENT PRIMARY KEY,
-		product_name TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-		image TEXT,
-		size TEXT,
 		weight TEXT,
-		resolution TEXT,
-		sensor TEXT,
-		button TEXT,
-		connectivity TEXT,
-		battery TEXT,
-		compatibility TEXT,
-		utility TEXT,
-		manufacturer TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+		brand TEXT,
+		dpi TEXT,                -- giữ nguyên tên cột là dpi
+		size TEXT,
+		sensor TEXT,          -- giữ nguyên tên cột là connector
+		connector TEXT,                -- giữ nguyên tên cột là pin
+		os TEXT,                 -- giữ nguyên tên cột là os
+		pin TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, -- giữ nguyên tên cột là brand
+		images TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,  -- giữ nguyên tên cột là name
+		name TEXT,
+		price TEXT,             -- giữ nguyên tên cột là images
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	-- tạo bảng tạm cho nguồn cellphones
@@ -50,6 +50,22 @@
 
 	-- Tạo bảng staging để lưu dữ liệu từ 2 bảng tạm
 	CREATE TABLE if not exists staging_mouse_daily (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		product_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+        price DECIMAL(18,2),
+		image MEDIUMTEXT,
+		size VARCHAR(255),
+		weight decimal(18,2),
+		resolution VARCHAR(255),
+		sensor VARCHAR(255),
+		connectivity VARCHAR(255),
+		battery VARCHAR(255),
+		compatibility VARCHAR(255),
+		manufacturer VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+    
+    CREATE TABLE if not exists staging_mouse_daily_gearvn (
 		id INT AUTO_INCREMENT PRIMARY KEY,
 		product_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
         price DECIMAL(18,2),
@@ -93,6 +109,14 @@ ALTER TABLE dbstaging.staging_mouse_daily
     ADD COLUMN width DECIMAL(18,2),
     ADD COLUMN height DECIMAL(18,2);
 alter table dbstaging.staging_mouse_daily
+	ADD COLUMN source varchar(255);
+    
+    ALTER TABLE dbstaging.staging_mouse_daily_gearvn
+    DROP COLUMN size,
+    ADD COLUMN length DECIMAL(18,2),
+    ADD COLUMN width DECIMAL(18,2),
+    ADD COLUMN height DECIMAL(18,2);
+alter table dbstaging.staging_mouse_daily_gearvn
 	ADD COLUMN source varchar(255)
 
 
