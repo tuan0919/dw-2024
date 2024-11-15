@@ -24,7 +24,7 @@ begin
 	into file_paths,fields_terminated, optionally_enclosed, lines_terminated, ignore_row, stg_fields, log_id, table_staging
     from dbcontrol.file_logs fl join dbcontrol.configs cf on fl.config_id = cf.config_id
 								join dbcontrol.process_properties pp on pp.property_id = cf.property_id
-    where fl.status = 'C_SE' AND DATE(fl.update_at) = date_load_data
+    where fl.status = 'C_SE' AND DATE(fl.update_at) = date_load_data and fl.config_idload_from_staging_to_dw =1
     limit 1;
 
     -- Kiểm tra xem file có null hay không
@@ -48,8 +48,6 @@ begin
     
 end //
 delimiter ;
-
-
 
 
 /*
@@ -77,6 +75,12 @@ END //
 
 DELIMITER ;
 
+
+
+
+
+
+call transform_and_cleaning_data;
 /*TRANSFORM + CLEANING DỮ LIỆU*/
 drop procedure if exists transform_and_cleaning_data;
 delimiter //
@@ -91,33 +95,11 @@ begin
         chuyển sang datetime: STR_TO_DATE(created_at, '%Y-%m-%d %H:%i:%s')
         thắc mắc gì thì hỏi thêm
     */
-    -- tạo bảng tạm để load dữ liệu từ các nguồn khác nhau, cụ thể ở đây là 2 nguồn. Bảng này có cấu trúc giống hoàn toàn với staging_main
-    DROP TEMPORARY TABLE IF EXISTS staging_combined;
-	DROP TEMPORARY TABLE IF EXISTS temp_product;
-    
-    CREATE TEMPORARY TABLE staging_combined (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-		product_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-        price DECIMAL(18,2),
-		image MEDIUMTEXT,
-		length decimal(18,2),
-        width decimal(18,2),
-        height decimal(18,2),
-		weight decimal(18,2),
-		resolution VARCHAR(255),
-		sensor VARCHAR(255),
-		connectivity VARCHAR(255),
-		battery VARCHAR(255),
-		compatibility VARCHAR(255),
-		manufacturer VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        source varchar(255)
-    );
-    
+        
 	SET SESSION group_concat_max_len = 1000000;  -- Hoặc giá trị lớn hơn tùy theo nhu cầu
 
     -- insert bảng staging_cellphones vào bảng tạm
-	INSERT INTO staging_combined (
+	INSERT INTO staging_mouse_daily (
 		product_name,
 		price,
 		image,
@@ -373,63 +355,24 @@ begin
     1. Kiểm tra xem có bị trùng dữ liệu hay không bằng cách so sánh nk (có thì so sánh)
     2. Xác định các trường dữ liệu quan trọng, tiến hành tiền xử lý dữ liệu tùy theo ý
     */
-    -- Check trùng
-    -- tiếp tục tạo thêm 1 bảng tạm để lưu các dòng dữ liệu không bị trùng
-    CREATE TEMPORARY TABLE temp_product AS
-    SELECT *
-    FROM (
-        SELECT *, ROW_NUMBER() OVER (PARTITION BY product_name, manufacturer, weight, resolution ORDER BY manufacturer) AS row_num
-        FROM dbstaging.staging_combined
-    ) AS temp
-    WHERE row_num = 1;
-    SET SQL_SAFE_UPDATES = 0;
-
-    DELETE FROM temp_product
+	DELETE s1
+	FROM 
+		staging_mouse_daily s1
+	JOIN 
+		staging_mouse_daily s2
+	ON 
+		s1.product_name = s2.product_name 
+        and s1.manufacturer = s2.manufacturer
+		AND s1.id > s2.id
 	WHERE 
-		product_name IS NULL                      -- Kiểm tra tên sản phẩm không được để trống
-		OR price IS NULL;  
-	SET SQL_SAFE_UPDATES = 1;
+		s1.id > 0;
 
-    -- chuyển mã cho chắc :v
-    ALTER TABLE temp_product
-	CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    DELETE FROM staging_mouse_daily
+	WHERE 
+		(product_name IS NULL                      -- Kiểm tra tên sản phẩm không được để trống
+		OR price IS NULL) and id >0;  
+
     
-    -- Tiến hành insert dữ liệu đã được xử lý vào staging
-    INSERT INTO staging_mouse_daily  (
-        product_name,
-		price,
-		image,
-		length,
-        width,
-        height,
-		weight,
-		resolution,
-		sensor,
-		connectivity,
-		battery,
-		compatibility,
-		manufacturer,
-		created_at,
-        source
-    )
-    SELECT 
-        product_name,
-		price,
-		image,
-		length,
-        width,
-        height,
-		weight,
-		resolution,
-		sensor,
-		connectivity,
-		battery,
-		compatibility,
-		manufacturer,
-		created_at,
-        source
-    FROM 
-        temp_product;
     
 end //
 delimiter ;

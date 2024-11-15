@@ -12,9 +12,9 @@ public class JDBIConfiguration {
     @Bean(value = "jdbi.db_control")
     public Jdbi jdbi_control() {
         var dataSource = new MysqlDataSource();
-        dataSource.setURL("jdbc:mysql://localhost:3307/db_control");
-        dataSource.setUser("db_control_login");
-        dataSource.setPassword("very_secret");
+        dataSource.setURL("jdbc:mysql://localhost:3307/dbcontrol");
+        dataSource.setUser("root");
+        dataSource.setPassword("123");
         var jdbi = Jdbi.create(dataSource);
         jdbi.installPlugin(new SqlObjectPlugin());
         return jdbi;

@@ -32,6 +32,6 @@ public class DatawarehouseCrawlApplication {
 
     @PostConstruct
     public void test() throws Exception {
-        controller.start_crawl(3);
+        controller.start_crawl(1);
     }
 }

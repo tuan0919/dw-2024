@@ -54,7 +54,7 @@ delimiter ;
 
 
 
-
+call transform_and_cleaning_data_gearvn();
 
 
 /*TRANSFORM + CLEANING DỮ LIỆU*/
@@ -71,33 +71,11 @@ begin
         chuyển sang datetime: STR_TO_DATE(created_at, '%Y-%m-%d %H:%i:%s')
         thắc mắc gì thì hỏi thêm
     */
-    -- tạo bảng tạm để load dữ liệu từ các nguồn khác nhau, cụ thể ở đây là 2 nguồn. Bảng này có cấu trúc giống hoàn toàn với staging_main
-    DROP TEMPORARY TABLE IF EXISTS staging_combined_gearvn;
-	DROP TEMPORARY TABLE IF EXISTS temp_product;
-    
-    CREATE TEMPORARY TABLE staging_combined_gearvn (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-		product_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-        price DECIMAL(18,2),
-		image MEDIUMTEXT,
-		length decimal(18,2),
-        width decimal(18,2),
-        height decimal(18,2),
-		weight decimal(18,2),
-		resolution VARCHAR(255),
-		sensor VARCHAR(255),
-		connectivity VARCHAR(255),
-		battery VARCHAR(255),
-		compatibility VARCHAR(255),
-		manufacturer VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        source varchar(255)
-    );
-    
+       
 	SET SESSION group_concat_max_len = 1000000;  -- Hoặc giá trị lớn hơn tùy theo nhu cầu
 
     -- insert bảng staging_cellphones vào bảng tạm
-	INSERT INTO staging_combined_gearvn (
+	INSERT INTO staging_mouse_daily_gearvn (
 		product_name,
 		price,
 		image,
@@ -305,61 +283,23 @@ begin
     */
     -- Check trùng
     -- tiếp tục tạo thêm 1 bảng tạm để lưu các dòng dữ liệu không bị trùng
-    CREATE TEMPORARY TABLE temp_product AS
-    SELECT *
-    FROM (
-        SELECT *, ROW_NUMBER() OVER (PARTITION BY product_name, manufacturer, weight, resolution ORDER BY manufacturer) AS row_num
-        FROM dbstaging.staging_combined_gearvn
-    ) AS temp
-    WHERE row_num = 1;
-    SET SQL_SAFE_UPDATES = 0;
-
-    DELETE FROM temp_product
+	DELETE s1
+	FROM 
+		staging_mouse_daily_gearvn s1
+	JOIN 
+		staging_mouse_daily_gearvn s2
+	ON 
+		s1.product_name = s2.product_name 
+        and s1.manufacturer = s2.manufacturer
+		AND s1.id > s2.id
 	WHERE 
-		product_name IS NULL                      -- Kiểm tra tên sản phẩm không được để trống
-		OR price IS NULL;  
-	SET SQL_SAFE_UPDATES = 1;
+		s1.id > 0;
 
-    -- chuyển mã cho chắc :v
-    ALTER TABLE temp_product
-	CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    
-    -- Tiến hành insert dữ liệu đã được xử lý vào staging
-    INSERT INTO staging_mouse_daily_gearvn  (
-        product_name,
-		price,
-		image,
-		length,
-        width,
-        height,
-		weight,
-		resolution,
-		sensor,
-		connectivity,
-		battery,
-		compatibility,
-		manufacturer,
-		created_at,
-        source
-    )
-    SELECT 
-        product_name,
-		price,
-		image,
-		length,
-        width,
-        height,
-		weight,
-		resolution,
-		sensor,
-		connectivity,
-		battery,
-		compatibility,
-		manufacturer,
-		created_at,
-        source
-    FROM 
-        temp_product;
+    DELETE FROM staging_mouse_daily_gearvn
+	WHERE 
+		(product_name IS NULL                      -- Kiểm tra tên sản phẩm không được để trống
+		OR price IS NULL) and id >0;  
+
     
 end //
 delimiter ;
