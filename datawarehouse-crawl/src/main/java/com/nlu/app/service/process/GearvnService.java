@@ -25,6 +25,7 @@ public class GearvnService extends Service {
     public String[] crawlProduct(String source) {
         try {
             String html = crawler.prepareHTML(source);
+            System.out.println("HTML: "+html);
             var fields = crawlProperties.getFields();
             var data = extractor.extract(html, fields);
             super.memory.add(data);
@@ -47,89 +48,88 @@ public class GearvnService extends Service {
                   "crawler": "com.nlu.app.service.crawler.Crawler_GearVN.class",
                   "extractor": "com.nlu.app.service.extractor.Extractor_GearVN.class",
                   "fields": [
-                       {
-                         "field_name": "weight",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'trọng lượng')]]/td[2]//span | //ul/li[div[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'trọng lượng')]]/div[2]"
-                       },
-                       {
-                         "field_name": "brand",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'hãng sản xuất') or contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'thương hiệu')]]/td[2]//span | //ul/li[div[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'hãng sản xuất') or contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'thương hiệu')]]/div[2]"
-                       },
-                       {
-                         "field_name": "dpi",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dpi') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'phân giải')]]/td[2]//span | //ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dpi') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'phân giải')]]/div[2]"
-                       },
-                       {
-                         "field_name": "size",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'kích thước')]]/td[2]//span | //ul/li[div[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'kích thước')]]/div[2]"
-                       },
-                       {
-                         "field_name": "sensor",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'cảm biến')]]/td[2]//span | //ul/li[div[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'cảm biến')]]/div[2]"
-                       },
-                       {
-                         "field_name": "connector",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'kết nối')]]/td[2]//span | //ul/li[div[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'kết nối')]]/div[2]"
-                       },
-                       {
-                         "field_name": "os",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'tương thích')]]/td[2]//span | //ul/li[div[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'tương thích')]]/div[2]"
-                       },
-                       {
-                         "field_name": "pin",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "xpath",
-                         "selector": "//tr[td[1]//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pin') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dung lượng')]]/td[2]//span | //ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pin') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dung lượng')]]/div[2]"
-                       },
-                       {
-                         "field_name": "images",
-                         "number": "multiple",
-                         "attr": "data-image",
-                         "type": "css",
-                         "selector": ".swiper-wrapper .product-gallery--photo"
-                       },
-                       {
-                         "field_name": "name",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "css",
-                         "selector": ".product-name h1"
-                       },
-                       {
-                         "field_name": "price",
-                         "number": "single",
-                         "attr": "text",
-                         "type": "css",
-                         "selector": ".pro-price.a"
-                       }
-                   ]
+                    {
+                      "field_name": "weight",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'trọng lượng')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'trọng lượng')]]/div[2]"
+                    },
+                    {
+                      "field_name": "brand",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'hãng sản xuất') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'thương hiệu')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'hãng sản xuất') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'thương hiệu')]]/div[2]"
+                    },
+                    {
+                      "field_name": "dpi",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dpi') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'phân giải')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dpi') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'phân giải')]]/div[2]"
+                    },
+                    {
+                      "field_name": "size",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'kích thước')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'kích thước')]]/div[2]"
+                    },
+                    {
+                      "field_name": "sensor",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'cảm biến')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'cảm biến')]]/div[2]"
+                    },
+                    {
+                      "field_name": "connector",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'kết nối')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'kết nối')]]/div[2]"
+                    },
+                    {
+                      "field_name": "os",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'tương thích')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'tương thích')]]/div[2]"
+                    },
+                    {
+                      "field_name": "pin",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "xpath",
+                      "selector": "//section[@id='table-2']//tr[td[1][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pin') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dung lượng')]]/td[2] | //section[@id='table-1']//ul/li[div[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'pin') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'dung lượng')]]/div[2]"
+                    },
+                    {
+                      "field_name": "images",
+                      "number": "multiple",
+                      "attr": "data-image",
+                      "type": "css",
+                      "selector": ".swiper-wrapper .product-gallery--photo"
+                    },
+                    {
+                      "field_name": "name",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "css",
+                      "selector": ".product-name h1"
+                    },
+                    {
+                      "field_name": "price",
+                      "number": "single",
+                      "attr": "text",
+                      "type": "css",
+                      "selector": ".pro-price.a"
+                    }
+                  ]
                 }
                 """;
         var service = new GearvnService(html);
-        var data = service.crawlProduct("https://gearvn.com/products/chuot-dareu-em901x-rgb-superlight-wireless-pink");
+        var data = service.crawlProduct("https://gearvn.com/products/chuot-logitech-g302-daedalus-prime");
         System.out.println(data);
-        service.saveMemoryToFile(true, "E:\\test.csv");
     }
 }
