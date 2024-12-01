@@ -19,11 +19,19 @@ public class Crawler_GearVN implements Crawler {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofMinutes(2));
             var gallery = driver.findElement(By.cssSelector(".product-gallery")).getAttribute("outerHTML");
             var infoHeader = driver.findElement(By.cssSelector(".info-header")).getAttribute("outerHTML");
-            String tableInfo;
+            String tableInfo1;
+            String tableInfo2;
             try {
-                tableInfo = driver.findElement(By.cssSelector(".table-technical ul")).getAttribute("outerHTML");
+                tableInfo1 = driver.findElement(By.cssSelector(".table-technical ul")).getAttribute("outerHTML");
             } catch (NoSuchElementException e) {
-                tableInfo = driver.findElement(By.cssSelector("table")).getAttribute("outerHTML");
+                e.printStackTrace();
+                tableInfo1 = "";
+            }
+            try {
+                tableInfo2 = driver.findElement(By.cssSelector("table")).getAttribute("outerHTML");
+            } catch (NoSuchElementException e) {
+                e.printStackTrace();
+                tableInfo2 = "";
             }
             // Thay thế tất cả các URL bắt đầu bằng "//" thành URL đầy đủ
             // Lấy URL hiện tại để xác định giao thức
@@ -35,9 +43,14 @@ public class Crawler_GearVN implements Crawler {
                     <section id="gearvn_product">
                         %s
                         %s
-                        %s
+                        <section id="table-1">
+                            %s
+                        </section>
+                        <section id="table-2">
+                            %s
+                        </section>
                     </section>
-                    """, gallery, infoHeader, tableInfo);
+                    """, gallery, infoHeader, tableInfo1, tableInfo2);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -57,7 +70,7 @@ public class Crawler_GearVN implements Crawler {
 
         // Khởi tạo ChromeDriver với ChromeOptions
         WebDriver driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofMinutes(2));
+//        driver.manage().timeouts().implicitlyWait(Duration.ofMinutes(2));
         driver.get(source);
         return driver;
     }
@@ -80,14 +93,14 @@ public class Crawler_GearVN implements Crawler {
                         if (loadMoreButton.isEnabled() && loadMoreButton.isDisplayed()) {
                             // load thêm dữ liệu
                             actions.moveToElement(loadMoreButton).click().perform();
-//                            /**
-//                             * Fix quang cao 11/11, ARGHHHHHHHHHH!!!!!!
-//                             */
-//                            {
-//                                wait.until(ExpectedConditions.elementToBeClickable(loadMoreButton));
-//                                Thread.sleep(3000);
-//                                actions.moveToElement(loadMoreButton).click().perform();
-//                            }
+                            /**
+                             * Fix quang cao 11/11, ARGHHHHHHHHHH!!!!!!
+                             */
+                            {
+                                wait.until(ExpectedConditions.elementToBeClickable(loadMoreButton));
+                                Thread.sleep(3000);
+                                actions.moveToElement(loadMoreButton).click().perform();
+                            }
                             int number = driver
                                     .findElements(By.cssSelector(".collection-product .loaded"))
                                             .size();
@@ -126,6 +139,6 @@ public class Crawler_GearVN implements Crawler {
 
     public static void main(String[] args) {
         var instance = new Crawler_GearVN();
-        System.out.println(instance.prepareSources("https://gearvn.com/collections/chuot-may-tinh/"));
+        System.out.println(instance.prepareHTML("https://gearvn.com/products/chuot-dareu-em901x-rgb-superlight-wireless-pink"));
     }
 }
