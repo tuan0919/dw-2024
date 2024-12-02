@@ -6,13 +6,17 @@ Viết proc xử lý quá trình load từ staging sang dw
 									B2: Insert dòng dữ liệu có thay đổi vào dw
 */
 drop procedure if exists load_from_staging_to_dw;
-call  load_from_staging_to_dw;
+call load_from_staging_to_dw;
 delimiter //
 create procedure load_from_staging_to_dw()
 begin
 	DROP temporary TABLE IF  EXISTS temp_update_products;
     DROP temporary TABLE IF  EXISTS temp_ids;
-	/*Insert các dòng mới*/
+	/*
+		Insert các dòng mới
+        với điều kiện là chỉ thêm những sản phẩm không trùng tên và nhà sản xuất giữa staging và datawarehouse
+		vào datawarehouse.product_dim 
+    */
 	INSERT INTO datawarehouse.product_dim (
 		product_name,
 		price,
@@ -54,28 +58,34 @@ begin
     
     
     /*Update các dòng có thay đổi*/
+    /*
+		Tạo bảng tạm `temp_update_products` để chứa các bản ghi trong bảng `staging_mouse_daily` 
+		có sự thay đổi so với bảng `product_dim` trong kho dữ liệu.
+	*/
     CREATE TEMPORARY TABLE temp_update_products AS
     SELECT sm.*
     FROM dbstaging.staging_mouse_daily sm
     WHERE EXISTS (
+		-- Kiểm tra sự tồn tại của bản ghi trong bảng `product_dim` với các điều kiện nhất định
         SELECT 1
         FROM datawarehouse.product_dim pd2
-        WHERE pd2.product_name = sm.product_name
-        AND pd2.isDelete = FALSE
-        AND pd2.expired_date = '9999-12-31'
-        and pd2.manufacturer = sm.manufacturer
-        AND (pd2.price <> sm.price OR
-             pd2.image <> sm.image OR
-             pd2.length <>sm.length or
-			 pd2.width <> sm.width or
-			 pd2.height <> sm.height or
-             pd2.weight <> sm.weight OR
-             pd2.resolution <> sm.resolution OR
-             pd2.sensor <> sm.sensor OR
-             pd2.connectivity <> sm.connectivity OR
-             pd2.battery <> sm.battery OR
-             pd2.compatibility <> sm.compatibility OR
-             pd2.manufacturer <> sm.manufacturer)
+        WHERE pd2.product_name = sm.product_name	-- Kiểm tra xem sản phẩm có cùng tên với sản phẩm trong `product_dim`
+        AND pd2.isDelete = FALSE					-- Chỉ xét các sản phẩm chưa bị xóa
+        AND pd2.expired_date = '9999-12-31'			-- Chỉ xét các sản phẩm chưa hết hạn
+        and pd2.manufacturer = sm.manufacturer		-- Kiểm tra nhà sản xuất có khớp không
+        -- Kiểm tra các trường khác nhau giữa bảng tạm và bảng trong kho dữ liệu, chỉ khi có sự thay đổi mới đưa vào bảng tạm
+        AND (pd2.price <> sm.price OR					-- Kiểm tra giá có khác nhau không
+             pd2.image <> sm.image OR					-- Kiểm tra hình ảnh có khác nhau không
+             pd2.length <>sm.length or					-- Kiểm tra chiều dài có khác nhau không
+			 pd2.width <> sm.width or					-- Kiểm tra chiều rộng có khác nhau không
+			 pd2.height <> sm.height or					-- Kiểm tra chiều cao có khác nhau không
+             pd2.weight <> sm.weight OR					-- Kiểm tra trọng lượng có khác nhau không
+             pd2.resolution <> sm.resolution OR			-- Kiểm tra độ phân giải có khác nhau không
+             pd2.sensor <> sm.sensor OR					-- Kiểm tra cảm biến có khác nhau không
+             pd2.connectivity <> sm.connectivity OR		-- Kiểm tra kết nối có khác nhau không
+             pd2.battery <> sm.battery OR				-- Kiểm tra pin có khác nhau không
+             pd2.compatibility <> sm.compatibility OR	-- Kiểm tra tính tương thích có khác nhau không
+             pd2.manufacturer <> sm.manufacturer)		-- Kiểm tra nhà sản xuất có khác nhau không
     );
     
     /*Tạo bảng tạm để lưu id các sản phẩm cần update thông tin được lấy từ bảng temp_update_products*/
@@ -85,18 +95,17 @@ begin
 	JOIN temp_update_products tup ON tup.product_name = pd2.product_name 
 		AND tup.manufacturer = pd2.manufacturer
 	WHERE 
-		pd2.isDelete = FALSE 
-		AND pd2.expired_date = '9999-12-31';
+		pd2.isDelete = FALSE 					-- Chỉ lấy các sản phẩm chưa bị xóa
+		AND pd2.expired_date = '9999-12-31'; 	-- Chỉ lấy các sản phẩm chưa hết hạn
     
     /*Tiến hành update các dòng cần update trong dw*/
     UPDATE datawarehouse.product_dim pd
 	SET 
-		pd.isDelete = TRUE,
-		pd.expired_date = CURRENT_DATE,
-		pd.date_delete = CURRENT_DATE
+		pd.isDelete = TRUE,					-- Đánh dấu sản phẩm là đã bị xóa
+		pd.expired_date = CURRENT_DATE,		-- Cập nhật ngày hết hạn của sản phẩm thành ngày hiện tại
+		pd.date_delete = CURRENT_DATE		-- Cập nhật ngày xóa sản phẩm thành ngày hiện tại
 	WHERE 
-		pd.id IN (SELECT id FROM temp_ids);
-	DROP TEMPORARY TABLE IF EXISTS temp_ids;
+		pd.id IN (SELECT id FROM temp_ids);	-- Chỉ cập nhật các sản phẩm có id nằm trong bảng tạm `temp_ids`
     
     /*Insert các dòng có dữ liệu update vào trong dw*/
     INSERT INTO datawarehouse.product_dim(
@@ -132,10 +141,17 @@ begin
         source
 	FROM 
 		temp_update_products tp;
-        
+	/*
+		Cập nhật bảng `product_dim` bằng cách liên kết với bảng `date_dim` 
+		và điền giá trị vào trường `date_insert_fk` trong `product_dim` dựa trên ngày tạo sản phẩm (created_at).
+    */
 	UPDATE product_dim AS p
-	JOIN date_dim AS d ON DATE(p.created_at) = d.full_date
+	JOIN date_dim AS d ON DATE(p.created_at) = d.full_date -- Kết nối với bảng `date_dim` bằng cách so sánh ngày trong trường `created_at` của sản phẩm 
+    -- Cập nhật trường `date_insert_fk` trong bảng `product_dim` bằng khóa ngày (`date_sk`) 
+	-- từ bảng `date_dim` để liên kết sản phẩm với ngày tương ứng trong bảng `date_dim`.
 	SET p.date_insert_fk = d.date_sk
+    -- Chỉ cập nhật các bản ghi mà trường `date_insert_fk` trong bảng `product_dim` có giá trị NULL, 
+	-- đảm bảo rằng chỉ những sản phẩm chưa có thông tin ngày được cập nhật.
 	WHERE p.date_insert_fk IS NULL;
 
     
