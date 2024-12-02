@@ -20,8 +20,4 @@ public class ProcessConfigService {
     public ProcessConfig getProcessConfig(long id) {
         return processConfigDAO.findOne(id);
     }
-
-    public List<ProcessConfig> getAllProcessConfigs() {
-        return processConfigDAO.findAll();
-    }
 }

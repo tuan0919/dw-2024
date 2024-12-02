@@ -11,7 +11,7 @@ services:
       - MYSQL_ROOT_PASSWORD=123
     volumes:
       - db_control-volumes:/var/lib/mysql
-      - E:\Temp:/allowed_dir
+      - E:\Temp:/allowed_dir # t mount thư mục /allowed_dir đến cái thư mục E:\Temp
     ports:
       - '3307:3306'
     command: --default-authentication-plugin=mysql_native_password --secure-file-priv=/allowed_dir

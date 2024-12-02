@@ -41,7 +41,7 @@ public class Crawler_GearVN implements Crawler {
             gallery = gallery.replaceAll("data-image=\"//", "data-image=\"" + protocol + "//");
             return String.format("""
                     <section id="gearvn_product">
-                        %s
+                        %scl
                         %s
                         <section id="table-1">
                             %s
@@ -93,14 +93,14 @@ public class Crawler_GearVN implements Crawler {
                         if (loadMoreButton.isEnabled() && loadMoreButton.isDisplayed()) {
                             // load thêm dữ liệu
                             actions.moveToElement(loadMoreButton).click().perform();
-                            /**
-                             * Fix quang cao 11/11, ARGHHHHHHHHHH!!!!!!
-                             */
-                            {
-                                wait.until(ExpectedConditions.elementToBeClickable(loadMoreButton));
-                                Thread.sleep(3000);
-                                actions.moveToElement(loadMoreButton).click().perform();
-                            }
+//                            /**
+//                             * Fix quang cao 11/11, ARGHHHHHHHHHH!!!!!!
+//                             */
+//                            {
+//                                wait.until(ExpectedConditions.elementToBeClickable(loadMoreButton));
+//                                Thread.sleep(3000);
+//                                actions.moveToElement(loadMoreButton).click().perform();
+//                            }
                             int number = driver
                                     .findElements(By.cssSelector(".collection-product .loaded"))
                                             .size();
