@@ -46,7 +46,7 @@ begin
 		cf.optionally_enclosed_by, 	-- Ký tự tùy chọn bao quanh các giá trị trong tệp CSV (optionally_enclosed).
 		cf.lines_terminated_by, 	-- Ký tự hoặc chuỗi kết thúc dòng trong tệp CSV (lines_terminated).
 		cf.ignore_rows, 			-- Số hàng đầu tiên trong tệp CSV cần bỏ qua, thường là dòng tiêu đề (ignore_row).
-		pp.header_csv, 				-- Danh sách các cột trong bảng staging tương ứng với tệp CSV (stg_fields).
+		pp.staging_fields, 			-- Danh sách các cột trong bảng staging tương ứng với tệp CSV (stg_fields).
 		fl.file_log_id, 			-- ID bản ghi trong bảng `file_logs`, đại diện cho tệp đang được xử lý (log_id).
 		cf.staging_table			-- Tên bảng staging sẽ được sử dụng để lưu dữ liệu từ tệp CSV (table_staging).
 	into 
