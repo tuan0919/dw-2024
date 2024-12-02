@@ -5,8 +5,9 @@ LẤY FILE CÓ TRẠNG THÁI LÀ L_RE (LOAD READY EXTRACT) ĐỂ ĐƯA VÀO CÂU
 MỤC ĐÍCH CỦA PROCEDURE LÀ LẤY ĐƯỢC QUERY LOAD CSV VÀO STAGING ĐỂ EXEC Ở JAVA
 */
 drop procedure if exists load_csv_to_temp_staging;
+drop procedure if exists load_csv_to_temp_staging_cellphone;
 delimiter //
-create procedure load_csv_to_temp_staging( in date_load_data date)
+create procedure load_csv_to_temp_staging_cellphone( in date_load_data date)
 begin
 	/*Khai báo biến với 
 		file_paths : đường dẫn của file csv
@@ -57,7 +58,7 @@ begin
 	where 
 		fl.status = 'C_SE'                  -- Chỉ lấy các bản ghi trong bảng `file_logs` có trạng thái "C_SE" 
 		AND DATE(fl.update_at) = date_load_data -- Lọc các bản ghi được cập nhật trong ngày được chỉ định (`date_load_data`).
-		AND fl.config_id = 1 -- Chỉ xử lý các cấu hình có chỉ báo tải dữ liệu từ staging vào DW.
+		AND fl.config_id = 2 -- Chỉ xử lý các cấu hình có chỉ báo tải dữ liệu từ staging vào DW.
 	limit 1;                                -- Giới hạn kết quả trả về chỉ 1 bản ghi (trường hợp xử lý từng tệp một).
 
     -- Kiểm tra xem biến `file_paths` (chứa đường dẫn tệp) có giá trị NULL hay không.
