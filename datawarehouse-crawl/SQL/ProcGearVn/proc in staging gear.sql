@@ -46,7 +46,7 @@ begin
 		cf.optionally_enclosed_by, 	-- Ký tự tùy chọn bao quanh các giá trị trong tệp CSV (optionally_enclosed).
 		cf.lines_terminated_by, 	-- Ký tự hoặc chuỗi kết thúc dòng trong tệp CSV (lines_terminated).
 		cf.ignore_rows, 			-- Số hàng đầu tiên trong tệp CSV cần bỏ qua, thường là dòng tiêu đề (ignore_row).
-		pp.staging_fields, 			-- Danh sách các cột trong bảng staging tương ứng với tệp CSV (stg_fields).
+		cf.staging_fields, 			-- Danh sách các cột trong bảng staging tương ứng với tệp CSV (stg_fields).
 		fl.file_log_id, 			-- ID bản ghi trong bảng `file_logs`, đại diện cho tệp đang được xử lý (log_id).
 		cf.staging_table			-- Tên bảng staging sẽ được sử dụng để lưu dữ liệu từ tệp CSV (table_staging).
 	into 
@@ -57,9 +57,6 @@ begin
 		join 
 			dbcontrol.configs cf -- Bảng chứa thông tin cấu hình cho các tệp CSV, bao gồm định dạng và bảng đích.
             on fl.config_id = cf.config_id
-		join 
-			dbcontrol.process_properties pp -- Bảng chứa thuộc tính xử lý, như danh sách cột tương ứng với tệp CSV.
-            on pp.property_id = cf.property_id
     where 
 		fl.status = 'C_SE' -- Chỉ lấy các bản ghi trong bảng `file_logs` có trạng thái "C_SE" 
 		AND DATE(fl.update_at) = date_load_data -- Lọc các bản ghi được cập nhật trong ngày được chỉ định (`date_load_data`).
