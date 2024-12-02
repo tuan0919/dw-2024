@@ -9,7 +9,7 @@ drop procedure load_csv_to_temp_staging_gearvn;
 delimiter //
 create procedure load_csv_to_temp_staging_gearvn( in date_load_data date)
 begin
-	/*Khai báo biến với 
+	/*Khai báo biến với
 		file_paths : đường dẫn của file csv
         fields_terminated : kí tự phân tách giữa các trường trong file csv -> dấu phẩy
         optionally_enclosed : kí tự bao quanh giá trị trong từng trường -> Dấu "
@@ -27,20 +27,20 @@ begin
     declare table_staging varchar(50);
     DECLARE stg_fields text;
     declare log_id int;
-	
+
     /*
-		Kiểm tra date_load_data - ngày lấy file để load vào staging, 
+		Kiểm tra date_load_data - ngày lấy file để load vào staging,
         nếu biến này không được truyền thì để mặc định là ngày hiện tại
     */
     IF date_load_data IS NULL THEN
         SET date_load_data = CURDATE();
     END IF;
-    
+
     /*
-		Lấy các thuộc tính cần thiết từ các bảng liên quan để xây dựng câu lệnh `LOAD DATA INFILE` 
+		Lấy các thuộc tính cần thiết từ các bảng liên quan để xây dựng câu lệnh `LOAD DATA INFILE`
 		nhằm tải dữ liệu từ tệp CSV vào bảng staging.
 	*/
-    select 
+    select
 		fl.file_path, 				-- Đường dẫn tệp CSV cần nạp vào hệ thống (file_paths).
 		cf.fields_terminated_by, 	-- Ký tự phân tách các trường (fields) trong tệp CSV (fields_terminated).
 		cf.optionally_enclosed_by, 	-- Ký tự tùy chọn bao quanh các giá trị trong tệp CSV (optionally_enclosed).
@@ -49,16 +49,16 @@ begin
 		cf.staging_fields, 			-- Danh sách các cột trong bảng staging tương ứng với tệp CSV (stg_fields).
 		fl.file_log_id, 			-- ID bản ghi trong bảng `file_logs`, đại diện cho tệp đang được xử lý (log_id).
 		cf.tble_staging			-- Tên bảng staging sẽ được sử dụng để lưu dữ liệu từ tệp CSV (table_staging).
-	into 
-		file_paths,fields_terminated, optionally_enclosed, 
+	into
+		file_paths,fields_terminated, optionally_enclosed,
 		lines_terminated, ignore_row, stg_fields, log_id, table_staging
-    from 
+    from
 			dbcontrol.file_logs fl -- Bảng ghi lại thông tin các tệp đã tải lên hệ thống.
-		join 
+		join
 			dbcontrol.configs cf -- Bảng chứa thông tin cấu hình cho các tệp CSV, bao gồm định dạng và bảng đích.
             on fl.config_id = cf.config_id
-    where 
-		fl.status = 'C_SE' -- Chỉ lấy các bản ghi trong bảng `file_logs` có trạng thái "C_SE" 
+    where
+		fl.status = 'C_SE' -- Chỉ lấy các bản ghi trong bảng `file_logs` có trạng thái "C_SE"
 		AND DATE(fl.update_at) = date_load_data -- Lọc các bản ghi được cập nhật trong ngày được chỉ định (`date_load_data`).
         and fl.config_id =3
     limit 1;
@@ -71,11 +71,11 @@ begin
 		-- Sử dụng câu lệnh SIGNAL để phát sinh một lỗi tùy chỉnh (user-defined error).
 		signal sqlstate '45000'  -- Mã lỗi SQLSTATE tùy chỉnh '45000'
 		set message_text = 'Error: File path is NULL or no file with C_SE status!';
-		-- Thông báo lỗi được hiển thị sẽ là: 
+		-- Thông báo lỗi được hiển thị sẽ là:
 		-- "Error: File path is NULL or no file with C_SE status!"
 		-- Mục đích là cảnh báo người dùng hoặc hệ thống rằng không có tệp nào để xử lý.
 	end if;
-    
+
     -- Tạo load data infile động
     SET @sql = CONCAT(
         "LOAD DATA INFILE '", file_paths, "' ", -- Tạo câu lệnh để chỉ định tệp cần nạp dữ liệu, sử dụng giá trị trong biến `file_paths`.
@@ -86,9 +86,10 @@ begin
         "IGNORE ", ignore_row, " ROWS ", -- Số dòng cần bỏ qua được lấy từ cấu hình (`ignore_row`).
         "(", stg_fields, ");" -- Sử dụng các trường trong staging_fields
     );
+    SET @log_id = log_id;
     -- Xuất câu truy vấn SQL đã tạo ra
     SELECT @sql AS debug_query, log_id AS file_log_id;
-    
+
 end //
 delimiter ;
 
@@ -98,12 +99,12 @@ drop procedure if exists transform_and_cleaning_data_gearvn;
 delimiter //
 create procedure transform_and_cleaning_data_gearvn()
 begin
-	-- TRANSFROM 
+	-- TRANSFROM
     /*
 		Thiết lập lại kích thước tối đa của kết quả trả về bởi hàm GROUP_CONCAT() trong session được tính bằng byte
         Được dùng để xử lý việc transfrom trong bảng staging
     */
-       
+
 	SET SESSION group_concat_max_len = 1000000;  -- Hoặc giá trị lớn hơn tùy theo nhu cầu
 
     -- insert bảng staging_gearvn vào bảng tạm
@@ -124,7 +125,7 @@ begin
 		created_at,
         source
 	)
-	SELECT 
+	SELECT
 		name,
         /*
 			Transform cho giá trị price -  giá của chuột
@@ -137,7 +138,7 @@ begin
 			WHEN price IS NULL OR price = '' THEN NULL  -- Handle NULL or empty strings
 			WHEN price REGEXP '^[0-9]{1,3}(\\.[0-9]{3})*₫$' THEN  -- Check for format with "₫" and "." separators
 				CAST(REPLACE(REPLACE(price, '₫', ''), '.', '') AS DECIMAL(18,2))  -- Remove "₫" and "." then cast to DECIMAL
-			ELSE 
+			ELSE
 				NULL  -- Set to NULL for unidentified cases
 		END AS price,
 		images,
@@ -286,7 +287,7 @@ begin
 		WHEN TRIM(size) REGEXP '^[0-9]+(\\.[0-9]+)? x [0-9]+(\\.[0-9]+)? x [0-9]+(\\.[0-9]+)? \\(mm\\)$' THEN
 			CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(size, ' x', -1), ' (mm)', 1) AS DECIMAL(18,2))
 		WHEN TRIM(size) REGEXP '^[0-9]+(\\.[0-9]+)? x [0-9]+(\\.[0-9]+)? x [0-9]+(\\.[0-9]+)? mm(, [0-9]+(\\.[0-9]+)? x [0-9]+(\\.[0-9]+)? x [0-9]+(\\.[0-9]+)? mm)*$' THEN
-			CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(size, ' x', -1), ' mm', 1) AS DECIMAL(18,2)) 
+			CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(size, ' x', -1), ' mm', 1) AS DECIMAL(18,2))
 		WHEN TRIM(size) REGEXP '^[0-9]+(\\,[0-9]+)? mm x [0-9]+(\\,[0-9]+)? mm x [0-9]+(\\,[0-9]+)? mm$' THEN
 			CAST(REPLACE(SUBSTRING_INDEX(size, ' x', -1), ' mm', '') AS DECIMAL(18,2))
 		WHEN TRIM(size) REGEXP '^[0-9]+(\\.[0-9]+)? \\(dài\\) x [0-9]+(\\.[0-9]+)? \\(rộng\\) x [0-9]+(\\.[0-9]+)? mm \\(cao\\)$' THEN
@@ -314,27 +315,27 @@ begin
         WHEN weight REGEXP '^[<]?[0-9]+(\\.[0-9]+)?( g| kg| gram| grams| gr|g|gr)(\\s*\\(.*\\))?$' THEN
              -- Trích xuất số lượng trước đơn vị (g), loại bỏ dấu '<' và 'g', sau đó chuyển thành kiểu DECIMAL
             CAST(REPLACE(REPLACE(TRIM(SUBSTRING_INDEX(weight, ' ', 1)), '<', ''), 'g', '') AS DECIMAL(18,2))
-		
+
         -- Kiểm tra trường hợp như '60 g / 3,56 oz'
         WHEN weight REGEXP '^[0-9]+(\\.[0-9]+)? g / [0-9]+(\\,[0-9]+)? oz.*$' THEN
             -- Trích xuất số lượng trong đơn vị gram trước dấu 'g', bỏ phần oz
             CAST(TRIM(SUBSTRING_INDEX(weight, ' g', 1)) AS DECIMAL(18,2))
-        
+
         -- Kiểm tra trường hợp cụ thể như '< 60 g'
         WHEN weight REGEXP '^<\\s*[0-9]+(\\.[0-9]+)?\\s*g$' THEN
             -- Loại bỏ dấu '<' và chuyển đổi giá trị thành kiểu DECIMAL
             CAST(REPLACE(REPLACE(TRIM(SUBSTRING(weight, 2)), 'g', ''), ' ', '') AS DECIMAL(18,2))
-        
+
         -- Kiểm tra trường hợp như '101,4 g - trọng lượng bao gồm pin (25g) và bộ thu (1,8g)'
         WHEN weight REGEXP '^[0-9]+(\\,[0-9]+)?\\s*g.*$' THEN
             -- Trích xuất số lượng trong đơn vị gram và thay thế dấu phẩy bằng dấu chấm để chuyển thành kiểu DECIMAL
             CAST(REPLACE(TRIM(SUBSTRING_INDEX(weight, ' g', 1)), ',', '.') AS DECIMAL(18,2)) -- Replace comma with dot
-		
+
         -- Kiểm tra trường hợp như 'POWERPLAY 68g / Pin AA 86g'
         WHEN weight REGEXP '^[a-zA-Z0-9]+\\s+[0-9]+(\\,[0-9]+)?\\s*g.*$' THEN
             -- Trích xuất số lượng (68g hoặc 86g) và chuyển đổi thành kiểu DECIMAL
             CAST(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(weight, 'g', 1), ' ', -1)) AS DECIMAL(18,2))
-        
+
         ELSE NULL
 		END AS weight,
 		dpi,
@@ -347,7 +348,7 @@ begin
         'gearVn'
 	FROM staging_gearvn;
 
-    
+
     -- CLEANING
     /*
     1. Kiểm tra xem có bị trùng dữ liệu hay không bằng cách so sánh nk (có thì so sánh)
@@ -355,24 +356,24 @@ begin
     */
     -- Xóa các bản ghi trùng lặp trong bảng staging_mouse_daily_gearvn
 	DELETE s1
-	FROM 
+	FROM
 		staging_mouse_daily_gearvn s1
-	JOIN 
+	JOIN
 		staging_mouse_daily_gearvn s2
-	ON 
+	ON
 		s1.product_name = s2.product_name 		-- So sánh tên sản phẩm
         and s1.manufacturer = s2.manufacturer 	-- So sánh nhà sản xuất
 		AND s1.id > s2.id						-- Chỉ giữ bản ghi có id nhỏ hơn, xóa bản ghi trùng lặp với id lớn hơn
-	WHERE 
+	WHERE
 		s1.id > 0;
 
     DELETE FROM staging_mouse_daily_gearvn
-	WHERE 
+	WHERE
 		(product_name IS NULL                      	-- Kiểm tra tên sản phẩm không được để trống
-		OR price IS NULL)							-- Xóa các bản ghi có dữ liệu quan trọng bị thiếu (product_name hoặc price bị NULL)	
-        and id >0;  								
+		OR price IS NULL)							-- Xóa các bản ghi có dữ liệu quan trọng bị thiếu (product_name hoặc price bị NULL)
+        and id >0;
 
-    
+
 end //
 delimiter ;
 
