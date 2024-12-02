@@ -117,6 +117,8 @@ alter table dbstaging.staging_mouse_daily
     ADD COLUMN width DECIMAL(18,2),
     ADD COLUMN height DECIMAL(18,2);
 alter table dbstaging.staging_mouse_daily_gearvn
-	ADD COLUMN source varchar(255)
+	ADD COLUMN source varchar(255);
 
+RENAME TABLE staging_mouse_cellphones TO staging_cellphone;
+RENAME TABLE staging_mouse_daily TO staging_mouse_daily_cellphone;
 
