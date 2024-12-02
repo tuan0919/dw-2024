@@ -48,7 +48,7 @@ begin
 		cf.ignore_rows, 			-- Số hàng đầu tiên trong tệp CSV cần bỏ qua, thường là dòng tiêu đề (ignore_row).
 		cf.staging_fields, 			-- Danh sách các cột trong bảng staging tương ứng với tệp CSV (stg_fields).
 		fl.file_log_id, 			-- ID bản ghi trong bảng `file_logs`, đại diện cho tệp đang được xử lý (log_id).
-		cf.staging_table			-- Tên bảng staging sẽ được sử dụng để lưu dữ liệu từ tệp CSV (table_staging).
+		cf.tble_staging			-- Tên bảng staging sẽ được sử dụng để lưu dữ liệu từ tệp CSV (table_staging).
 	into 
 		file_paths,fields_terminated, optionally_enclosed, 
 		lines_terminated, ignore_row, stg_fields, log_id, table_staging
