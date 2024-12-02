@@ -14,7 +14,9 @@ import org.jdbi.v3.sqlobject.statement.SqlCall;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RegisterBeanMappers({
         @RegisterBeanMapper(LocalDateTime.class),
@@ -43,4 +45,14 @@ public interface FileLogDAO {
         WHERE file_log_id = :file_log_id
         """)
     void updateStatus(@Bind("file_log_id") long id, @Bind("status") LogStatus status);
+
+
+    @SqlQuery("""
+            SELECT * FROM file_logs
+            WHERE
+            config_id = :config_id
+            AND
+            DATE(create_time) = :date
+            """)
+    Optional<FileLogs> findOne(@Bind("date") LocalDate date, @Bind("config_id") long config_id);
 }

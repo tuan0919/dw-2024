@@ -1,58 +1,55 @@
 package com.nlu.app.controller;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nlu.app.constant.LogStatus;
 import com.nlu.app.entity.FileLogs;
-import com.nlu.app.entity.ProcessProperties;
 import com.nlu.app.service.database.FileLogService;
 import com.nlu.app.service.database.ProcessConfigService;
-import com.nlu.app.service.database.ProcessPropertiesService;
+import com.nlu.app.service.database.ProcessStagingService;
 import com.nlu.app.service.process.CellphoneService;
-import com.nlu.app.service.process.FileService;
 import com.nlu.app.service.process.GearvnService;
 import com.nlu.app.service.process.Service;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import static com.nlu.app.constant.ProcessConfigConstant.CELLPHONE_CONFIG;
+import static com.nlu.app.constant.ProcessConfigConstant.GEARVN_CONFIG;
 
 @Controller
 @RequiredArgsConstructor
 public class CrawlController {
-    public static final String CELLPHONE_PROPERTY = "cellphone_properties";
-    public static final String GEARVN_PROPERTY = "gearvn_properties";
     private final ProcessConfigService processConfigService;
-    private final ProcessPropertiesService processPropertiesService;
     private final FileLogService fileLogService;
+    private final ProcessStagingService processStagingService;
 
-    public void start_process_crawl() {
+    public void start_process_crawl(LocalDate date, long config_id) {
 
+    }
+
+    public void start_insert_to_temp_staging(LocalDate date, int config_id) {
+        if (date == null) {
+            date = LocalDate.now(); // today
+        }
+        processStagingService.loadCSV_DataToTemp(date, config_id);
     }
 
     public void start_crawl(long config_id) throws IOException {
         var processConfig = processConfigService.getProcessConfig(config_id);
-        long property_id = processConfig.getProperty_id();
-        var properties = processPropertiesService.getProcessProperties(property_id);
         Service service = null;
-        switch (properties.getName()) {
-            case CELLPHONE_PROPERTY -> {
-                String json = properties.getValue();
+        switch ((int) config_id) {
+            case CELLPHONE_CONFIG -> {
+                String json = processConfig.getJson_config();
                 service = new CellphoneService(json);
-                break;
             }
-            case GEARVN_PROPERTY -> {
-                String json = properties.getValue();
+            case GEARVN_CONFIG -> {
+                String json = processConfig.getJson_config();
                 service = new GearvnService(json);
-                break;
             }
         }
         String today = LocalDate.now()
-                .format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String filePath = String.format("%s\\%s_%s.csv",
                 processConfig.getSave_location(),
                 processConfig.getFile_name(),

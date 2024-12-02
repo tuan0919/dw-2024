@@ -12,7 +12,7 @@ public class JDBIConfiguration {
     @Bean(value = "jdbi.db_control")
     public Jdbi jdbi_control() {
         var dataSource = new MysqlDataSource();
-        dataSource.setURL("jdbc:mysql://localhost:3307/db_control");
+        dataSource.setURL("jdbc:mysql://localhost:3307/dbcontrol");
         dataSource.setUser("db_control_login");
         dataSource.setPassword("very_secret");
         var jdbi = Jdbi.create(dataSource);
