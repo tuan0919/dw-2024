@@ -13,8 +13,8 @@ public class JDBIConfiguration {
     public Jdbi jdbi_control() {
         var dataSource = new MysqlDataSource();
         dataSource.setURL("jdbc:mysql://localhost:3307/dbcontrol");
-        dataSource.setUser("db_control_login");
-        dataSource.setPassword("very_secret");
+        dataSource.setUser("root");
+        dataSource.setPassword("123");
         var jdbi = Jdbi.create(dataSource);
         jdbi.installPlugin(new SqlObjectPlugin());
         return jdbi;
@@ -24,6 +24,17 @@ public class JDBIConfiguration {
     public Jdbi jdbi_staging() {
         var dataSource = new MysqlDataSource();
         dataSource.setURL("jdbc:mysql://localhost:3307/dbstaging?allowLoadLocalInfile=true");
+        dataSource.setUser("root");
+        dataSource.setPassword("123");
+        var jdbi = Jdbi.create(dataSource);
+        jdbi.installPlugin(new SqlObjectPlugin());
+        return jdbi;
+    }
+
+    @Bean(value = "jdbi.db_warehouse")
+    public Jdbi jdbi_warehouse() {
+        var dataSource = new MysqlDataSource();
+        dataSource.setURL("jdbc:mysql://localhost:3307/datawarehouse?allowLoadLocalInfile=true");
         dataSource.setUser("root");
         dataSource.setPassword("123");
         var jdbi = Jdbi.create(dataSource);
