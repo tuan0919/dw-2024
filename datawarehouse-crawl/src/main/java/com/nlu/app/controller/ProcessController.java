@@ -28,11 +28,15 @@ public class CrawlController {
 
     }
 
-    public void start_insert_to_temp_staging(LocalDate date, int config_id) {
+    public void start_insert_to_temp(LocalDate date, int config_id) {
         if (date == null) {
             date = LocalDate.now(); // today
         }
         processStagingService.loadCSV_DataToTemp(date, config_id);
+    }
+
+    public void start_insert_to_staging(int config_id) {
+        processStagingService.loadTemp_DataToStaging(config_id);
     }
 
     public void start_crawl(long config_id) throws IOException {
