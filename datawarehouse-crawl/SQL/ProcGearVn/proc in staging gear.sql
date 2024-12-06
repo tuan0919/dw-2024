@@ -9,75 +9,50 @@ drop procedure load_csv_to_temp_staging_gearvn;
 delimiter //
 create procedure load_csv_to_temp_staging_gearvn( in date_load_data date)
 begin
-	/*Khai báo biến với
-		file_paths : đường dẫn của file csv
-        fields_terminated : kí tự phân tách giữa các trường trong file csv -> dấu phẩy
-        optionally_enclosed : kí tự bao quanh giá trị trong từng trường -> Dấu "
-        lines_terminated : kí tự kết thúc một dòng -> \n
-        ignore_row : số dòng cần bỏ qua trong file csv
-        table_staging : tên bảng sẽ load data từ csv vào staging
-        stg_fields : tên các cột của bảng staging đó
-        log_id : id của của file log
-    */
-	declare file_paths varchar(255);
+declare file_paths varchar(255);
     declare fields_terminated varchar(10);
-	declare optionally_enclosed varchar(10);
-	declare lines_terminated varchar(10);
-	declare ignore_row	int;
+    declare optionally_enclosed varchar(10);
+    declare lines_terminated varchar(10);
+    declare ignore_row int;
     declare table_staging varchar(50);
-    DECLARE stg_fields text;
+    declare stg_fields text;
     declare log_id int;
 
-    /*
-		Kiểm tra date_load_data - ngày lấy file để load vào staging,
-        nếu biến này không được truyền thì để mặc định là ngày hiện tại
-    */
     IF date_load_data IS NULL THEN
         SET date_load_data = CURDATE();
-    END IF;
+END IF;
 
-    /*
-		Lấy các thuộc tính cần thiết từ các bảng liên quan để xây dựng câu lệnh `LOAD DATA INFILE`
-		nhằm tải dữ liệu từ tệp CSV vào bảng staging.
-	*/
-    select
-		fl.file_path, 				-- Đường dẫn tệp CSV cần nạp vào hệ thống (file_paths).
-		cf.fields_terminated_by, 	-- Ký tự phân tách các trường (fields) trong tệp CSV (fields_terminated).
-		cf.optionally_enclosed_by, 	-- Ký tự tùy chọn bao quanh các giá trị trong tệp CSV (optionally_enclosed).
-		cf.lines_terminated_by, 	-- Ký tự hoặc chuỗi kết thúc dòng trong tệp CSV (lines_terminated).
-		cf.ignore_rows, 			-- Số hàng đầu tiên trong tệp CSV cần bỏ qua, thường là dòng tiêu đề (ignore_row).
-		cf.staging_fields, 			-- Danh sách các cột trong bảng staging tương ứng với tệp CSV (stg_fields).
-		fl.file_log_id, 			-- ID bản ghi trong bảng `file_logs`, đại diện cho tệp đang được xử lý (log_id).
-		cf.tble_staging			-- Tên bảng staging sẽ được sử dụng để lưu dữ liệu từ tệp CSV (table_staging).
-	into
-		file_paths,fields_terminated, optionally_enclosed,
-		lines_terminated, ignore_row, stg_fields, log_id, table_staging
-    from
-			dbcontrol.file_logs fl -- Bảng ghi lại thông tin các tệp đã tải lên hệ thống.
-		join
-			dbcontrol.configs cf -- Bảng chứa thông tin cấu hình cho các tệp CSV, bao gồm định dạng và bảng đích.
-            on fl.config_id = cf.config_id
-    where
-		fl.status = 'C_SE' -- Chỉ lấy các bản ghi trong bảng `file_logs` có trạng thái "C_SE"
-		AND DATE(fl.update_at) = date_load_data -- Lọc các bản ghi được cập nhật trong ngày được chỉ định (`date_load_data`).
-        and fl.config_id =3
+select
+    fl.file_path,
+    cf.fields_terminated_by,
+    cf.optionally_enclosed_by,
+    cf.lines_terminated_by,
+    cf.ignore_rows,
+    cf.staging_fields,
+    fl.file_log_id,
+    cf.tble_staging
+into
+    file_paths, fields_terminated, optionally_enclosed,
+    lines_terminated, ignore_row, stg_fields, log_id, table_staging
+from
+    dbcontrol.file_logs fl
+        join
+    dbcontrol.configs cf
+    on fl.config_id = cf.config_id
+where
+    fl.status = 'C_SE'
+  AND DATE(fl.create_time) = date_load_data
+  and fl.config_id = 3
     limit 1;
 
-    -- Kiểm tra xem biến `file_paths` (chứa đường dẫn tệp) có giá trị NULL hay không.
-    if file_paths is null then
-		-- Nếu giá trị của `file_paths` là NULL, điều này có nghĩa:
-		-- 1. Không có tệp nào được tìm thấy với trạng thái 'C_SE' (trạng thái sẵn sàng để tải).
-		-- 2. Truy vấn trước đó không trả về kết quả
-		-- Sử dụng câu lệnh SIGNAL để phát sinh một lỗi tùy chỉnh (user-defined error).
-		signal sqlstate '45000'  -- Mã lỗi SQLSTATE tùy chỉnh '45000'
-		set message_text = 'Error: File path is NULL or no file with C_SE status!';
-		-- Thông báo lỗi được hiển thị sẽ là:
-		-- "Error: File path is NULL or no file with C_SE status!"
-		-- Mục đích là cảnh báo người dùng hoặc hệ thống rằng không có tệp nào để xử lý.
-	end if;
+if file_paths is null then
+        signal sqlstate '45000'
+        set message_text = 'Error: File path is NULL or no file with C_SE status!';
+end if;
 
-    -- Tạo load data infile động
-    SET @sql = CONCAT(
+    -- Tách các câu lệnh SQL thành hai biến riêng biệt
+    SET @truncate_sql = CONCAT("TRUNCATE TABLE dbstaging.staging_gearvn;");
+    SET @load_sql = CONCAT(
         "LOAD DATA INFILE '", file_paths, "' ", -- Tạo câu lệnh để chỉ định tệp cần nạp dữ liệu, sử dụng giá trị trong biến `file_paths`.
         "INTO TABLE dbstaging.", table_staging, " ", -- Chỉ định bảng mục tiêu trong database `dbstaging`, tên bảng được lấy từ biến `table_staging`.
         "FIELDS TERMINATED BY '", fields_terminated, "' ", -- Định nghĩa ký tự phân cách giữa các trường trong file CSV. Giá trị này được lấy từ cấu hình (`fields_terminated`).
@@ -87,8 +62,11 @@ begin
         "(", stg_fields, ");" -- Sử dụng các trường trong staging_fields
     );
     SET @log_id = log_id;
-    -- Xuất câu truy vấn SQL đã tạo ra
-    SELECT @sql AS debug_query, log_id AS file_log_id;
+
+    -- Xuất các câu lệnh SQL đã tạo
+SELECT @truncate_sql AS truncate_query;
+SELECT @load_sql AS load_query;
+SELECT @log_id AS file_log_id;
 
 end //
 delimiter ;
