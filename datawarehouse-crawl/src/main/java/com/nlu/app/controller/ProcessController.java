@@ -4,6 +4,7 @@ import com.nlu.app.entity.FileLogs;
 import com.nlu.app.service.database.FileLogService;
 import com.nlu.app.service.database.ProcessConfigService;
 import com.nlu.app.service.database.ProcessStagingService;
+import com.nlu.app.service.database.ProcessWarehouseService;
 import com.nlu.app.service.process.CellphoneService;
 import com.nlu.app.service.process.GearvnService;
 import com.nlu.app.service.process.Service;
@@ -19,10 +20,11 @@ import static com.nlu.app.constant.ProcessConfigConstant.GEARVN_CONFIG;
 
 @Controller
 @RequiredArgsConstructor
-public class CrawlController {
+public class ProcessController {
     private final ProcessConfigService processConfigService;
     private final FileLogService fileLogService;
     private final ProcessStagingService processStagingService;
+    private final ProcessWarehouseService processWarehouseService;
 
     public void start_process_crawl(LocalDate date, long config_id) {
 
@@ -37,6 +39,10 @@ public class CrawlController {
 
     public void start_insert_to_staging(int config_id) {
         processStagingService.loadTemp_DataToStaging(config_id);
+    }
+
+    public void start_load_to_warehouse(int config_id) {
+        processWarehouseService.loadStaging_DataToWarehouse(config_id);
     }
 
     public void start_crawl(long config_id) throws IOException {
