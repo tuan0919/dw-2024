@@ -1,7 +1,7 @@
 package com.nlu.app;
 import com.nlu.app.constant.ProcessConfigConstant;
-import com.nlu.app.controller.CrawlController;
-import com.nlu.app.dao.staging.TempStagingDAO;
+import com.nlu.app.controller.ProcessController;
+import com.nlu.app.exception.GlobalHandlerException;
 import com.nlu.app.service.database.FileLogService;
 import com.nlu.app.service.database.ProcessConfigService;
 import jakarta.annotation.PostConstruct;
@@ -12,13 +12,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.time.LocalDate;
-import java.time.Month;
-
 @SpringBootApplication
 @RequiredArgsConstructor
 public class DatawarehouseCrawlApplication {
-    private final CrawlController controller;
+    private final ProcessController controller;
     private final ProcessConfigService processConfigService;
     private final FileLogService fileLogService;
     Jdbi jdbi;
@@ -28,17 +25,20 @@ public class DatawarehouseCrawlApplication {
         this.jdbi = jdbi;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         SpringApplication.run(DatawarehouseCrawlApplication.class, args);
     }
 
     @PostConstruct
     public void test() throws Exception {
 //        controller.start_crawl(3);
-//        var date = LocalDate.of(2024, Month.NOVEMBER, 4);
-//        jdbi.onDemand(TempStagingDAO.class)
-//                .insertToTempStaging(date);
-        controller.start_insert_to_temp_staging(LocalDate.of(2024, Month.NOVEMBER, 4),
-                ProcessConfigConstant.CELLPHONE_CONFIG);
+        try {
+//            controller.start_insert_to_temp_staging(LocalDate.of(2024, Month.DECEMBER, 2),
+//                    ProcessConfigConstant.GEARVN_CONFIG);
+//            controller.start_insert_to_staging(ProcessConfigConstant.GEARVN_CONFIG);
+            controller.start_load_to_warehouse(ProcessConfigConstant.GEARVN_CONFIG);
+        } catch (Exception e) {
+            GlobalHandlerException.handleGlobalException(e);
+        }
     }
 }
