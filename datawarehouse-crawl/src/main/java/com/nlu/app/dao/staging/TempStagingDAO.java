@@ -1,5 +1,6 @@
 package com.nlu.app.dao.staging;
 
+import com.nlu.app.constant.LogStatus;
 import com.nlu.app.constant.ProcessConfigConstant;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.sqlobject.SqlObject;
@@ -21,12 +22,18 @@ public interface TempStagingDAO extends SqlObject {
         handle.createCall(String.format("{call dbstaging.%s}", procedure_name))
                 .bind("date", date)
                 .invoke();
-        var procedure = handle.createQuery("SELECT @sql").mapTo(String.class).one();
+        var truncate = handle.createQuery("SELECT @truncate_sql").mapTo(String.class).one();
+        var procedure = handle.createQuery("SELECT @load_sql").mapTo(String.class).one();
         var logId = handle.createQuery("SELECT @log_id").mapTo(int.class).one();
+        handle.createCall("{call dbcontrol.update_log_status(:log_id, :new_status)}")
+                .bind("log_id", logId)
+                .bind("new_status", LogStatus.L_P)
+                .invoke();
+        handle.execute(truncate);
         handle.execute(procedure);
         handle.createCall("{call dbcontrol.update_log_status(:log_id, :new_status)}")
                 .bind("log_id", logId)
-                .bind("new_status", "L_SE")
+                .bind("new_status", LogStatus.L_SE)
                 .invoke();
     }
 }
