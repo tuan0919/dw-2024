@@ -20,5 +20,8 @@ public class GlobalHandlerException {
                 handleException((SQLException) casted.getCause());
             }
         }
+        else {
+            e.printStackTrace();
+        }
     }
 }

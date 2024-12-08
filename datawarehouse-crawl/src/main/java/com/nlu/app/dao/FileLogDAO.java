@@ -46,13 +46,19 @@ public interface FileLogDAO {
         """)
     void updateStatus(@Bind("file_log_id") long id, @Bind("status") LogStatus status);
 
+    @SqlUpdate("""
+        call update_log_status_count_fileSize(
+            :file_log_id, :new_status,
+            :new_count, :new_file_size
+        )
+        """)
+    void updateStatus_count_fileSize(@Bind("file_log_id") long id,
+                                     @Bind("new_status") LogStatus status,
+                                     @Bind("new_count") int count,
+                                     @Bind("new_file_size") int fileSize);
 
     @SqlQuery("""
-            SELECT * FROM file_logs
-            WHERE
-            config_id = :config_id
-            AND
-            DATE(create_time) = :date
+            call query_logs_to_check_crawl_execution(:config_id, :create_date)
             """)
-    Optional<FileLogs> findOne(@Bind("date") LocalDate date, @Bind("config_id") long config_id);
+    Optional<FileLogs> findOneByDate(int config_id, LocalDate create_date);
 }

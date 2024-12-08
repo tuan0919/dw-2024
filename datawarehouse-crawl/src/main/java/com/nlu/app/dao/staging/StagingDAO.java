@@ -14,7 +14,7 @@ public interface StagingDAO extends SqlObject {
                 procedure_name = "transform_and_cleaning_data_gearvn()";
             }
             case ProcessConfigConstant.CELLPHONE_CONFIG -> {
-                procedure_name = "transform_and_cleaning_data_cellphones()";
+                procedure_name = "transform_and_cleaning_data_cellphone()";
             }
         }
         Handle handle = this.getHandle();
