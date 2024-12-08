@@ -1,3 +1,5 @@
 spring:
   application:
     name: data-warehouse-2024
+  mail:
+    username: pc-mouse-dw2024
