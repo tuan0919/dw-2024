@@ -1,5 +1,6 @@
 package com.nlu.app.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -9,6 +10,8 @@ import java.util.Properties;
 
 @Configuration
 public class MailConfiguration {
+    @Value("${secrets.mail.password}")
+    private String password;
     @Bean
     public JavaMailSender getJavaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -16,7 +19,7 @@ public class MailConfiguration {
         mailSender.setPort(587);
 
         mailSender.setUsername("21130601@st.hcmuaf.edu.vn");
-        mailSender.setPassword("uhrq zfey zwnt dbbb");
+        mailSender.setPassword(password);
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
