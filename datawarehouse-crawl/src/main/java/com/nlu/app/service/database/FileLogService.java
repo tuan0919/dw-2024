@@ -7,6 +7,7 @@ import org.jdbi.v3.core.Jdbi;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -26,7 +27,11 @@ public class FileLogService {
         fileLogDAO.updateStatus(log_id, status);
     }
 
-    public FileLogs findOne(long file_log_id) {
-        return fileLogDAO.findOne(file_log_id);
+    public void updateStatus_count_fileSize(long log, LogStatus status, int count, int fileSize) {
+        fileLogDAO.updateStatus_count_fileSize(log, status, count, fileSize);
+    }
+
+    public Optional<FileLogs> findOneByDate(int config_id, LocalDate date) {
+        return fileLogDAO.findOneByDate(config_id, date);
     }
 }
