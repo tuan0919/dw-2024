@@ -48,7 +48,7 @@ begin
 		compatibility,
 		manufacturer,
         source
-	FROM dbstaging.staging_mouse_daily sm
+	FROM dbstaging.staging_mouse_daily_cellphone sm
 	WHERE NOT EXISTS (
 		SELECT 1
 		FROM datawarehouse.product_dim pd
@@ -64,7 +64,7 @@ begin
 	*/
     CREATE TEMPORARY TABLE temp_update_products AS
     SELECT sm.*
-    FROM dbstaging.staging_mouse_daily sm
+    FROM dbstaging.staging_mouse_daily_cellphone sm
     WHERE EXISTS (
 		-- Kiểm tra sự tồn tại của bản ghi trong bảng `product_dim` với các điều kiện nhất định
         SELECT 1
