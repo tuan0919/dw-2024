@@ -69,7 +69,7 @@ BEGIN
     FROM 
         datawarehouse.product_dim dw
     WHERE 
-        dw.product_name NOT IN (SELECT product_name FROM datamart) AND dw.isDelete = FALSE;
+        dw.product_name NOT IN (SELECT product_name FROM product_dim ) AND dw.isDelete = FALSE;
     -- Xóa các sản phẩm đã đánh dấu xóa trong DM 
     DELETE FROM product_dim
     WHERE id IN (
