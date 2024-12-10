@@ -15,7 +15,7 @@ import java.util.List;
 
 public class Crawler_Cellphones implements Crawler {
     @Override
-    public String prepareHTML(String source) {
+    public String prepareHTML(String source) throws InterruptedException {
         var driver = prepareDriver(source);
         try {
             Actions actions = new Actions(driver);
@@ -43,7 +43,7 @@ public class Crawler_Cellphones implements Crawler {
                     """, modalContent, gallery, priceBox, headerBox);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e.getCause());
+            throw e;
         } finally {
             driver.quit();
         }
@@ -113,7 +113,7 @@ public class Crawler_Cellphones implements Crawler {
                     .toList();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e.getCause());
+            throw e;
         } finally {
             driver.quit();
         }

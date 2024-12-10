@@ -53,7 +53,7 @@ public class Crawler_GearVN implements Crawler {
                     """, gallery, infoHeader, tableInfo1, tableInfo2);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e);
+            throw e;
         } finally {
             driver.quit();
         }
@@ -130,7 +130,7 @@ public class Crawler_GearVN implements Crawler {
         }
         catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e);
+            throw e;
         } finally {
             driver.quit();
         }

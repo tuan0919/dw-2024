@@ -10,7 +10,7 @@ public interface Crawler {
      * @param source nguồn sản phẩm
      * @return cấu trúc HTML dưới dạng String của một sản phẩm
      */
-    String prepareHTML(String source);
+    String prepareHTML(String source) throws InterruptedException;
     WebDriver prepareDriver(String source);
     /**
      * Logic chuẩn bị trích xuất nguồn dữ liệu từ một trang cụ thể.

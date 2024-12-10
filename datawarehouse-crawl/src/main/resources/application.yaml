@@ -1,7 +1,5 @@
 spring:
   application:
     name: data-warehouse-2024
-  mail:
-    username: pc-mouse-dw2024
   config:
-    import: classpath:secret.yaml
+    import: classpath:process-config.yaml

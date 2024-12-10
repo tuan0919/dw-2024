@@ -1,6 +1,8 @@
 package com.nlu.app.service.mail;
 
 import com.nlu.app.entity.EmailDetails;
+import com.nlu.app.entity.MailMessage;
+import com.nlu.app.util.MyUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +13,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
     private JavaMailSender javaMailSender;
-    @Value("${spring.mail.username}") private String sender;
+    @Value("${config.mail.MAIL_TO}") private String recipient;
+    @Value("${config.mail.MAIL_FROM}") private String from;
+    @Value("${config.mail.messages-template}") private String template;
 
     @Autowired
     private void setJavaMailSender(JavaMailSender javaMailSender) {
@@ -22,7 +26,24 @@ public class EmailService {
         var emailDetails = new EmailDetails();
         emailDetails.setSubject(subject);
         emailDetails.setMsgBody(message);
-        emailDetails.setRecipient("nqat0919@gmail.com");
+        emailDetails.setRecipient(recipient);
+        sendSimpleMail(emailDetails);
+    }
+
+    public void sendSimpleMail(MailMessage msg) {
+        String sendMessage = String.format(template,
+                msg.getProcessName(),
+                msg.getStatus(),
+                MyUtil.formatDateTime(msg.getStartTime()),
+                MyUtil.formatDateTime(msg.getEndTime()),
+                msg.getNote(),
+                msg.getReason(),
+                msg.getExceptionTrace()
+        );
+        var emailDetails = new EmailDetails();
+        emailDetails.setSubject(msg.getSubject());
+        emailDetails.setMsgBody(sendMessage);
+        emailDetails.setRecipient(recipient);
         sendSimpleMail(emailDetails);
     }
 
@@ -39,7 +60,7 @@ public class EmailService {
                     = new SimpleMailMessage();
 
             // Setting up necessary details
-            mailMessage.setFrom(sender);
+            mailMessage.setFrom(from);
             mailMessage.setTo(details.getRecipient());
             mailMessage.setText(details.getMsgBody());
             mailMessage.setSubject(details.getSubject());

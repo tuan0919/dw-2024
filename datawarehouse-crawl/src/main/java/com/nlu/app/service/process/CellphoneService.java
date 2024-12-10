@@ -18,19 +18,15 @@ public class CellphoneService extends Service {
     }
 
     @Override
-    public String[] crawlProduct(String source) {
-        try {
-            var crawler = new Crawler_Cellphones();
-            String html = crawler.prepareHTML(source);
-            Extractor_Cellphones extractor = new Extractor_Cellphones();
-            var fields = crawlProperties.getFields();
-            var data = extractor.extract(html, fields);
-            super.memory.add(data);
-            System.out.println("items in memory: "+super.memory.size());
-            return data;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public String[] crawlProduct(String source) throws InterruptedException {
+        var crawler = new Crawler_Cellphones();
+        String html = crawler.prepareHTML(source);
+        Extractor_Cellphones extractor = new Extractor_Cellphones();
+        var fields = crawlProperties.getFields();
+        var data = extractor.extract(html, fields);
+        super.memory.add(data);
+        System.out.println("items in memory: "+super.memory.size());
+        return data;
     }
 
     @Override

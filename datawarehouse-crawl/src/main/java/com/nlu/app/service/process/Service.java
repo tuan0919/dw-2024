@@ -21,7 +21,7 @@ public abstract class Service {
         this.memory = new ArrayList<>();
     }
 
-    public abstract String[] crawlProduct(String source);
+    public abstract String[] crawlProduct(String source) throws InterruptedException;
     public abstract List<String> getSourcesFromPage(String page);
     public int saveMemoryToFile(boolean resetMemory, String filePath) throws IOException {
         String[] header = crawlProperties.getCSVHeader();

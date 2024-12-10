@@ -1,20 +1,26 @@
 package com.nlu.app.exception;
 
-public class ProcessException extends RuntimeException {
+import com.nlu.app.entity.MailMessage;
+
+public class ProcessException extends Exception {
     ProcessExceptionEnum enumException;
-    String mailMessage;
+    MailMessage errorMailMessage;
 
     public ProcessExceptionEnum getEnumException() {
         return enumException;
     }
 
-    public String getMailMessage() {
-        return mailMessage;
+    public MailMessage getErrorMailMessage() {
+        return errorMailMessage;
     }
 
-
-    public ProcessException(ProcessExceptionEnum enumException, String mailMessage) {
+    public ProcessException(ProcessExceptionEnum enumException, MailMessage errorMailMessage) {
         this.enumException = enumException;
-        this.mailMessage = mailMessage;
+        this.errorMailMessage = errorMailMessage;
+    }
+
+    public ProcessException(ProcessExceptionEnum enumException) {
+        this.enumException = enumException;
+        this.errorMailMessage = null;
     }
 }
